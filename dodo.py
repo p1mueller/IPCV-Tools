@@ -1,12 +1,13 @@
 """Project builder."""
 
 import pathlib
+from glob import glob
 
 import pygraphviz
 from import_deps import ModuleSet
 
 DOIT_CONFIG = {
-    "default_tasks": ["imports", "dot", "draw"],
+    "default_tasks": ["imports", "dot", "draw", "codestyle"],
 }
 
 node_color = "#d0a9d0"
@@ -25,7 +26,7 @@ def get_imports(pkg_modules, module_path):
 
 
 def task_imports():
-    """find imports from a python module"""
+    """Find imports from a python module."""
     for name, module in PKG_MODULES.by_name.items():
         yield {
             "name": name,
@@ -39,7 +40,7 @@ def print_imports(modules):
 
 
 def task_print():
-    """print on stdout list of direct module imports"""
+    """Print on stdout list of direct module imports."""
     for name, module in PKG_MODULES.by_name.items():
         yield {
             "name": name,
@@ -61,7 +62,7 @@ def module_to_dot(imports, targets):
 
 
 def task_dot():
-    """generate a graphviz's dot graph from module imports"""
+    """Generate a graphviz's dot graph from module imports."""
     return {
         "targets": [f"{output_name}.dot"],
         "actions": [module_to_dot],
@@ -71,12 +72,23 @@ def task_dot():
 
 
 def task_draw():
-    """generate image from a dot file"""
+    """Generate image from a dot file."""
     return {
         "file_dep": [f"{output_name}.dot"],
         "targets": [f"{output_name}.png"],
         "actions": ["dot -Tpng -Gdpi=70 %(dependencies)s -o %(targets)s"],
         "clean": True,
+    }
+
+
+def task_codestyle():
+    """Ensure proper codestyle."""
+    files = []
+    for folder in ["examples", "ipcv_tools"]:
+        files.extend(glob(f"{folder}/*.py"))
+    return {
+        "file_dep": files,
+        "actions": ["isort -q .", "black -q ."],
     }
 
 

@@ -87,7 +87,7 @@ class Pipeline:
             System exit code
         """
         with self.camera as cam, self.processor as proc:
-            if:
+            if (self.width is not None) and (self.height is not None):
                 if camera_settings is None:
                     camera_settings = {}
                 camera_settings["width"] = self.width

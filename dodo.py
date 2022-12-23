@@ -7,7 +7,7 @@ import pygraphviz
 from import_deps import ModuleSet
 
 DOIT_CONFIG = {
-    "default_tasks": ["imports", "dot", "draw", "codestyle"],
+    "default_tasks": ["imports", "dot", "draw"],
 }
 
 node_color = "#d0a9d0"
@@ -17,6 +17,15 @@ modules = [
     path for path in base_path.glob("**/*.py") if pathlib.Path(path).stem != "__init__"
 ]
 PKG_MODULES = ModuleSet(modules)
+
+
+def _find_py_files(folders=None):
+    if folders is None:
+        folders = ["examples", "ipcv_tools"]
+    files = []
+    for folder in folders:
+        files.extend(glob(f"{folder}/*.py"))
+    return files
 
 
 def get_imports(pkg_modules, module_path):
@@ -81,11 +90,19 @@ def task_draw():
     }
 
 
+def task_uml():
+    folder = "ipcv_tools"
+    files = _find_py_files([folder])
+    return {
+        "file_dep": files,
+        "targets": ["classes.png"],
+        "actions": [f"pyreverse -my -o png {folder}/**.py"],
+    }
+
+
 def task_codestyle():
     """Ensure proper codestyle."""
-    files = []
-    for folder in ["examples", "ipcv_tools"]:
-        files.extend(glob(f"{folder}/*.py"))
+    files = _find_py_files()
     return {
         "file_dep": files,
         "actions": ["isort -q .", "black -q ."],

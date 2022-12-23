@@ -40,11 +40,23 @@ class Plotter(ABC):
         self.graph = None
 
     def set_graph(self, graph, example):
+        """Set graph object.
+
+        Args:
+            graph: Graph
+            example: Example image to initialize graph.
+        """
         self.graph = graph
         self.init_graph(example)
 
     @abstractmethod
     def init_graph(self, example):
+        """Initialize graph with line dummies.
+
+        Args:
+            graph: Graph
+            example: Example image to initialize graph.
+        """
         pass
 
     @abstractmethod
@@ -60,15 +72,20 @@ class HistogramPlotter(Plotter):
         """Initialize.
 
         Args:
-            graph (PlotWidget): Plot
-            img (np.ndarray): Example image
             frame_index (int): Index of frame to use. Defaults to 0
+            grayscale (bool): Make histogram for grayscale images. Defaults to False.
         """
         super().__init__()
         self.frame_index = frame_index
         self.grayscale = grayscale
 
     def init_graph(self, example):
+        """Initialize graph with line dummies.
+
+        Args:
+            graph: Graph
+            example: Example image to initialize graph.
+        """
         assert self.graph is not None
         self.lines = []
         self.graph.addLegend()

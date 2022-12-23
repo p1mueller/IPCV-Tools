@@ -4,7 +4,6 @@
 
 import sys
 
-import numpy as np
 from example_viewer import ContourResampler
 
 from ipcv_tools.pipeline import Pipeline

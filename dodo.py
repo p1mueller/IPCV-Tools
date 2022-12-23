@@ -1,7 +1,9 @@
+"""Project builder."""
+
 import pathlib
 
 import pygraphviz
-from import_deps import ModuleSet, PyModule
+from import_deps import ModuleSet
 
 DOIT_CONFIG = {
     "default_tasks": ["imports", "dot", "draw"],

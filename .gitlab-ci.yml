@@ -10,7 +10,8 @@ dependencies:
     - python3 -m pip install doit pygraphviz import_deps
     - doit
   artifacts:
-    - dependencies.png
+    paths:
+      - dependencies.png
 
 pytest:
   stage: test

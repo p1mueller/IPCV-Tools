@@ -75,7 +75,7 @@ def task_draw():
     return {
         "file_dep": [f"{output_name}.dot"],
         "targets": [f"{output_name}.png"],
-        "actions": ["dot -Tpng %(dependencies)s -o %(targets)s"],
+        "actions": ["dot -Tpng -Gdpi=70 %(dependencies)s -o %(targets)s"],
         "clean": True,
     }
 

@@ -1,22 +1,26 @@
 image: python:3.8.10
 
-build:setup:
-  stage: build
-  script:
-    - python3 -m pip install -e .
+before_script:
+  - python3 -m pip install -e .
 
-build:dependencies:
+dependencies:
   stage: build
   script:
     - apt update && apt install -y graphviz graphviz-dev
     - python3 -m pip install doit pygraphviz import_deps
     - doit
+  artifacts:
+    - dependencies.png
 
-test:
-  needs:
-    - job: build:setup
-      artifacts: true
+pytest:
   stage: test
   script:
     - python3 -m pip install pytest
     - pytest tests
+
+flake8:
+  stage: test
+  script:
+    - python3 -m pip install flake8 flake8-docstring
+    - flake8 --max-line-length=90 --ignore=E203,D202,D105,W503 \
+      --docstring-convention=google .

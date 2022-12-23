@@ -6,7 +6,7 @@ import numpy as np
 
 from ipcv_tools.utilities import FPS
 
-target_fps = 30
+target_fps = 20
 sleep_time = 1 / target_fps
 
 

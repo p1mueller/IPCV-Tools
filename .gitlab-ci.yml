@@ -1,0 +1,22 @@
+image: python:3.8.10
+
+build:setup:
+  stage: build
+  script:
+    - python3 -m pip install -e .
+
+build:dependencies:
+  stage: build
+  script:
+    - apt update && apt install -y graphviz graphviz-dev
+    - python3 -m pip install doit pygraphviz import_deps
+    - doit
+
+test:
+  needs:
+    - job: build:setup
+      artifacts: true
+  stage: test
+  script:
+    - python3 -m pip install pytest
+    - pytest tests

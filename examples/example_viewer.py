@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Test case to show case the ImageViewer class."""
 
+from typing import Sequence
+
 import cv2
 import numpy as np
 
@@ -9,11 +11,11 @@ import numpy as np
 class ContourResampler:
     """Resamples contour using Fourier coefficients."""
 
-    def __init__(self, keep_coeffs=1.0, sigma=3.0) -> None:
+    def __init__(self, keep_coeffs: float = 1.0, sigma: float = 3.0) -> None:
         """Initialize.
 
         Args:
-            keep_coeffs (float): Percentage of Fourier coefficients kept. Between 0 to 1.
+            keep_coeffs: Percentage of Fourier coefficients kept. Between 0 to 1.
                 Defaults to 1.0.
             sigma: Sigma of Gaussian blur. Defaults to 3.0.
         """
@@ -21,7 +23,7 @@ class ContourResampler:
         self.keep_coeffs = keep_coeffs
         self.output_names = ["Original", "Blurred", "Thresholded", "Result"]
 
-    def set_keep_coeffs(self, value):
+    def set_keep_coeffs(self, value: float) -> None:
         """Set the percentage of Fourier coefficients kept.
 
         Args:
@@ -29,7 +31,7 @@ class ContourResampler:
         """
         self.keep_coeffs = value
 
-    def set_sigma(self, value):
+    def set_sigma(self, value: float) -> None:
         """Set the sigma of the Gaussian blur.
 
         Args:
@@ -37,7 +39,7 @@ class ContourResampler:
         """
         self.sigma = value
 
-    def __call__(self, frame):
+    def __call__(self, frame: np.ndarray) -> Sequence[np.ndarray]:
         """Processing function.
 
         1. Blur image (Gaussian blur)
@@ -52,9 +54,10 @@ class ContourResampler:
             frame: Frame from a video source
 
         Returns:
-            np.ndarray: Original frame
-            np.ndarray: Frame after thresholding
-            np.ndarray: Frame with optimized contour overlay
+            Original frame
+            Blurred frame
+            Frame after thresholding
+            Frame with optimized contour overlay
         """
         # # Pre-processing
         f = np.mean(frame, -1)

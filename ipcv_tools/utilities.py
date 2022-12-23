@@ -4,27 +4,28 @@
 
 import threading
 from time import time
+from typing import Any, List, Optional
 
 
 class FPS:
     """FPS evaluator."""
 
-    def __init__(self, alpha=0.98) -> None:
+    def __init__(self, alpha: float = 0.98) -> None:
         """Initialize.
 
         Args:
-            alpha (float): IIR filter remember factor. Defaults to 0.98.
+            alpha: IIR filter remember factor. Defaults to 0.98.
         """
         self.alpha = alpha
         self.value = 0.0
-        self.last_time = None
+        self.last_time: Optional[float] = None
         self.initialized = False
 
-    def restart(self):
+    def restart(self) -> None:
         """Restart current measurement."""
         self.last_time = None
 
-    def update(self):
+    def update(self) -> None:
         """Take new measurement and add to value."""
         t = time()
         if self.last_time is not None:
@@ -40,24 +41,24 @@ class FPS:
 class Buffer:
     """Shared buffer."""
 
-    def __init__(self, size) -> None:
+    def __init__(self, size: int) -> None:
         """Initialize.
 
         Args:
-            size (int): Maximum buffer size
+            size: Maximum buffer size
         """
         self.size = size
-        self._buf = []
+        self._buf: List[Any] = []
         self.not_empty_event = threading.Event()
         self.lock = threading.Lock()
 
-    def add(self, element):
+    def add(self, element: Any) -> None:
         """Add new element to buffer.
 
         If full the oldest element will be discarded.
 
         Args:
-            element (Any): New element
+            element: New element
         """
         with self.lock:
             if len(self._buf) >= self.size:
@@ -65,11 +66,11 @@ class Buffer:
             self._buf.append(element)
             self.not_empty_event.set()
 
-    def pop(self):
+    def pop(self) -> Any:
         """Return and remove oldest element from the buffer.
 
         Returns:
-            Any: oldest element
+            Oldest element
         """
         self.not_empty_event.wait()
         with self.lock:
@@ -78,5 +79,5 @@ class Buffer:
                 self.not_empty_event.clear()
         return element
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._buf)

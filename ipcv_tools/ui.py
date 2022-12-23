@@ -4,26 +4,27 @@
 
 import sys
 from pathlib import Path
+from typing import Any, Callable, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject, Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
-from ipcv_tools.plotting import Plotter
 
+from ipcv_tools.plotting import Plotter
 from ipcv_tools.utilities import FPS
 
 
-def array_to_qimage(array):
+def array_to_qimage(array: np.ndarray) -> QImage:
     """Convert an numpy array to QImage.
 
     Args:
-        array (np.ndarray): Array to convert. 2D or 3D arrays allowed.
+        array: Array to convert. 2D or 3D arrays allowed.
 
     Returns:
-         QImage: Converted image
+         Converted image
     """
     if array.ndim == 2:
         array = array[..., None]
@@ -45,8 +46,15 @@ class Slider(QtWidgets.QWidget):
     value_changed = pyqtSignal(float)
 
     def __init__(
-        self, name="", min_val=0, max_val=1, steps=100, value=None, width=300, height=10
-    ):
+        self,
+        name: str = "",
+        min_val: float = 0,
+        max_val: float = 1,
+        steps: int = 100,
+        value: float = None,
+        width: int = 300,
+        height: int = 10,
+    ) -> None:
         """Initialize.
 
         Args:
@@ -66,7 +74,7 @@ class Slider(QtWidgets.QWidget):
         if value is None:
             value = steps // 2
         else:
-            value = np.clip(int(0.5 + (value - min_val) / self.step), 0, steps - 1)
+            value = int(np.clip(int(0.5 + (value - min_val) / self.step), 0, steps - 1))
 
         self.slider = QtWidgets.QSlider(Qt.Horizontal)
         self.slider.setMinimumSize(width, height)
@@ -88,11 +96,11 @@ class Slider(QtWidgets.QWidget):
         slider_layout.addWidget(self.slider_text)
         self.setLayout(slider_layout)
 
-    def value(self):
+    def value(self) -> float:
         """Get current value of slider."""
         return self.min_val + self.step * self.slider.value()
 
-    def change_text(self, value):
+    def change_text(self, value: float) -> None:
         """Change text of slider value label.
 
         Args:
@@ -100,7 +108,7 @@ class Slider(QtWidgets.QWidget):
         """
         self.slider_text.setText(f"{value:-.3g}")
 
-    def value_change_slider(self, value):
+    def value_change_slider(self, value: int) -> None:
         """Slot for internal slider value change.
 
         Args:
@@ -116,19 +124,19 @@ class VideoThread(QThread):
 
     changed_image = pyqtSignal(tuple)
 
-    def __init__(self, source, parent) -> None:
+    def __init__(self, source: Callable, parent: QObject) -> None:
         """Initialize.
 
         Args:
-            source (function): Function to get new frame(s)
-            parent (QObject): Parent
+            source: Function to get new frame(s)
+            parent: Parent
         """
         super().__init__(parent)
         self.fps = FPS()
         self.running = False
         self.source = source
 
-    def run(self):
+    def run(self) -> None:
         """Task of thread.
 
         Polls frame(s) from video source and emits signal, when new elements present.
@@ -143,22 +151,29 @@ class VideoThread(QThread):
 class CameraUI(QtWidgets.QWidget):
     """UI to display camera images and results of image pipeline."""
 
-    def __init__(self, width, height, img_names, source, title="IPCV Cam"):
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        img_names: Sequence[str],
+        source: Callable,
+        title: str = "IPCV Cam",
+    ):
         """Initialize.
 
         Args:
-            width (int): Width of images.
-            height (int): Height of images.
-            img_names (List[str]): Name of images (used in tabs)
-            source (Worker): Video source pipeline.
-            title (str): Window title. Defaults to "IPCV Cam".
+            width: Width of images.
+            height: Height of images.
+            img_names: Name of images (used in tabs)
+            source: Video source pipeline.
+            title: Window title. Defaults to "IPCV Cam".
         """
         self.app = QtWidgets.QApplication(sys.argv)
 
         super().__init__()
         self.save_request = False
-        self.width = width
-        self.height = height
+        self._width = width
+        self._height = height
         self.img_names = img_names
 
         self.setWindowTitle(title)
@@ -169,7 +184,7 @@ class CameraUI(QtWidgets.QWidget):
         tab.setTabPosition(QtWidgets.QTabWidget.West)
         for img_name in self.img_names:
             img_widget = QtWidgets.QLabel()
-            img_widget.setBaseSize(self.width, self.height)
+            img_widget.setBaseSize(self._width, self._height)
             tab.addTab(img_widget, img_name)
             self.img_widgets.append(img_widget)
         tab.setCurrentIndex(len(img_names) - 1)
@@ -211,11 +226,11 @@ class CameraUI(QtWidgets.QWidget):
         self.app.aboutToQuit.connect(self.quit)
 
     @pyqtSlot(tuple)
-    def update_images(self, frames):
+    def update_images(self, frames: Sequence[np.ndarray]) -> None:
         """Update images.
 
         Args:
-            frames (Tuple(np.ndarray)): New frames
+            frames: New frames
         """
         for img_widget, frame in zip(self.img_widgets, frames):
             qimg = array_to_qimage(frame)
@@ -241,46 +256,56 @@ class CameraUI(QtWidgets.QWidget):
             else:
                 plt.imsave(file, frame, cmap="gray")
 
-    def set_info_label(self):
+    def set_info_label(self) -> None:
         """Set text of info label."""
-        self.info_label.setText(
-            f"Shape: ({self.height}, {self.width}), FPS: {self.video_thread.fps.value:.1f}"
-        )
+        infos = [
+            f"Shape: ({self._height}, {self._width})",
+            f"FPS: {self.video_thread.fps.value:.1f}",
+        ]
+        self.info_label.setText(", ".join(infos))
 
-    def quit(self):
+    def quit(self) -> None:
         """Quits UI and all underlying processes."""
         self.video_thread.running = False
         while self.video_thread.isRunning():
             pass
         self.app.quit()
 
-    def save_image_request(self):
+    def save_image_request(self) -> None:
         """Set request for image saving."""
         self.save_request = True
 
-    def run(self):
+    def run(self) -> int:
         """Start the UI."""
-        null_img = np.zeros((self.height, self.width, 3), np.uint8)
+        null_img = np.zeros((self._height, self._width, 3), np.uint8)
         self.update_images(len(self.img_widgets) * [null_img])
         self.video_thread.start()
         self.show()
-        self.app.exec_()
+        return self.app.exec_()
 
     def add_slider(
-        self, name, start, end, steps=100, width=300, height=10, func=None, value=None
-    ):
+        self,
+        name: str,
+        start: float,
+        end: float,
+        steps: int = 100,
+        width: int = 300,
+        height: int = 10,
+        func: Callable = None,
+        value: float = None,
+    ) -> Slider:
         """Add a slider to the right side of the UI.
 
         Args:
-            name (str): Name of slider
-            start (float): Minimum value of slider.
-            end (float): Maximum value of slider.
-            steps (int): Number of increments the slider has. Defaults to 100.
-            width (int): Minimum width of the slider. Defaults to 300.
-            height (int): Minimal height of the slider. Defaults to 10.
-            func (function): Callback function when slider value changes.
+            name: Name of slider
+            start: Minimum value of slider.
+            end: Maximum value of slider.
+            steps: Number of increments the slider has. Defaults to 100.
+            width: Minimum width of the slider. Defaults to 300.
+            height: Minimal height of the slider. Defaults to 10.
+            func: Callback function when slider value changes.
                 Defaults to None.
-            value (float): Initial value. If None the value is set to the middle
+            value: Initial value. If None the value is set to the middle
                 of the range. Defaults to None.
         """
         if value is None:
@@ -289,21 +314,30 @@ class CameraUI(QtWidgets.QWidget):
         self.tools_layout.addWidget(slider)
         if func is not None:
             slider.value_changed.connect(func)
+        return slider
 
-    def add_plot(self, name, plotter, width=400, height=150, signal=None, func=None):
+    def add_plot(
+        self,
+        name: str,
+        plotter: Plotter,
+        width: int = 400,
+        height: int = 150,
+        signal: Any = None,
+        func: Callable = None,
+    ) -> pg.PlotWidget:
         """Add plot widget to the right side ot the UI.
 
         Args:
-            name (str): Name of plot
-            plotter (Plotter): Handles plotting from new frames.
-            width (int): Minimum width of the plot. Defaults to 400.
-            height (int): Minimum height of the plot. Defaults to 150.
-            signal (pyqtSignal): Update signal used to call callback function (func).
+            name: Name of plot
+            plotter: Handles plotting from new frames.
+            width: Minimum width of the plot. Defaults to 400.
+            height: Minimum height of the plot. Defaults to 150.
+            signal: Update signal used to call callback function (func).
                 Defaults to None.
-            func (function): Callback function. Defaults to None.
+            func: Callback function. Defaults to None.
 
         Returns:
-            PlotWidget: Plot
+            Plot
         """
         assert isinstance(plotter, Plotter)
         graph = pg.PlotWidget()
@@ -314,10 +348,10 @@ class CameraUI(QtWidgets.QWidget):
 
         self.tools_layout.addWidget(graph)
 
-        null_img = np.ones((self.height, self.width, 3), np.uint8)
+        null_img = np.ones((self._height, self._width, 3), np.uint8)
         plotter.set_graph(graph, null_img)
         self.video_thread.changed_image.connect(plotter.update)
-        if (signal is not None) and (func is not None):
+        if:
             signal.connect(func)
         return graph
 
@@ -330,21 +364,21 @@ if __name__ == "__main__":
     min_sigma = sigma = 1
     max_sigma = 30
 
-    def _random_noise_img():
+    def _random_noise_img() -> Tuple[np.ndarray, np.ndarray]:
         noisy_img = np.random.randint(0, 256, size + (3,), np.uint8)
         imgs = [np.random.normal(noise.mean, noise.std, size) for noise in noises]
         img = np.clip(np.stack(imgs, -1), 0, 255).astype(np.uint8)
         return noisy_img, img
 
     class _Noise:
-        def __init__(self, mean, std):
+        def __init__(self, mean: float, std: float) -> None:
             self.mean = mean
             self.std = std
 
-        def set_mean(self, value):
+        def set_mean(self, value: float) -> None:
             self.mean = value
 
-        def set_std(self, value):
+        def set_std(self, value: float) -> None:
             self.std = value
 
     viewer = CameraUI(

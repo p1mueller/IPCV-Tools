@@ -7,6 +7,17 @@ import numpy as np
 from ipcv_tools.camera import GenICam
 from ipcv_tools.viewer import ImageViewer
 
+
+def _get_frame() -> np.ndarray:
+    frame = cam.get_next_element()
+    f = np.mean(frame, -1)  # Convert to grayscale
+    f = np.round(f).astype("uint8")  # Convert to uint8
+
+    g = mapping[f]
+    res_img = np.repeat(np.expand_dims(g, -1), 3, -1)
+    return res_img
+
+
 port = None
 factor = 0.4
 decimation = 2
@@ -22,6 +33,7 @@ mapping = 255 ** (1 - gamma) * r**gamma  # gamma
 mapping = np.array(mapping, dtype="uint8")
 
 with GenICam() as cam:
+    assert cam.handler is not None
     node_map = cam.handler.remote_device.node_map
     node_map.DecimationHorizontal.value = decimation
     node_map.DecimationVertical.value = decimation
@@ -29,18 +41,7 @@ with GenICam() as cam:
     node_map.Height.value = height
     node_map.PixelFormat.value = "RGB8"
 
-    viewer = ImageViewer((height, 2 * width), font={"color": (0, 0, 255)})
-
+    viewer = ImageViewer(height, 2 * width, _get_frame, font={"color": (0, 0, 255)})
     cam.start()
-    while viewer.is_running():
-        frame = cam.get_frame()
-        f = np.mean(frame, -1)  # Convert to grayscale
-        f = np.round(f).astype("uint8")  # Convert to uint8
 
-        g = mapping[f]
-
-        out = np.concatenate([f, g], 1)
-
-        res_img = np.repeat(np.expand_dims(g, -1), 3, -1)
-        viewer.update(res_img)
-    viewer.stop()
+    viewer.run()

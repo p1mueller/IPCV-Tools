@@ -2,23 +2,26 @@
 # -*- coding: utf-8 -*-
 """Plotting utilities for the camera UI."""
 
-from abc import ABC, abstractmethod
 import warnings
+from abc import ABC, abstractmethod
+from typing import List, Sequence, Tuple
 
 import numpy as np
 import pyqtgraph as pg
 from skimage.exposure import histogram
 
 
-def compute_histogram(img, grayscale=False):
+def compute_histogram(
+    img: np.ndarray, grayscale: bool = False
+) -> Tuple[np.ndarray, np.ndarray]:
     """Compute the histogram for an RGB image.
 
     Args:
-        img (np.ndarray): RGB image
+        img: RGB image
 
     Returns:
-        np.ndarray: Center points of bins
-        np.ndarray: Histogram values
+        Center points of bins
+        Histogram values
     """
     x = np.arange(256)
     channel_axis = -1 if (img.ndim > 2) and not grayscale else None
@@ -35,11 +38,11 @@ class Plotter(ABC):
         """Initialize.
 
         Args:
-            graph (PlotWidget): Plot
+            graph: Plot
         """
         self.graph = None
 
-    def set_graph(self, graph, example):
+    def set_graph(self, graph: pg.PlotWidget, example: np.ndarray) -> None:
         """Set graph object.
 
         Args:
@@ -50,7 +53,7 @@ class Plotter(ABC):
         self.init_graph(example)
 
     @abstractmethod
-    def init_graph(self, example):
+    def init_graph(self, example: np.ndarray) -> None:
         """Initialize graph with line dummies.
 
         Args:
@@ -60,7 +63,7 @@ class Plotter(ABC):
         pass
 
     @abstractmethod
-    def update(self, *args):
+    def update(self, frames: Sequence[np.ndarray]) -> None:
         """Update plot."""
         pass
 
@@ -68,18 +71,18 @@ class Plotter(ABC):
 class HistogramPlotter(Plotter):
     """Plot histogram of a frame."""
 
-    def __init__(self, frame_index=0, grayscale=False):
+    def __init__(self, frame_index: int = 0, grayscale: bool = False):
         """Initialize.
 
         Args:
-            frame_index (int): Index of frame to use. Defaults to 0
-            grayscale (bool): Make histogram for grayscale images. Defaults to False.
+            frame_index: Index of frame to use. Defaults to 0
+            grayscale: Make histogram for grayscale images. Defaults to False.
         """
         super().__init__()
         self.frame_index = frame_index
         self.grayscale = grayscale
 
-    def init_graph(self, example):
+    def init_graph(self, example: np.ndarray) -> None:
         """Initialize graph with line dummies.
 
         Args:
@@ -87,7 +90,7 @@ class HistogramPlotter(Plotter):
             example: Example image to initialize graph.
         """
         assert self.graph is not None
-        self.lines = []
+        self.lines: List[pg.PlotCurveItem] = []
         self.graph.addLegend()
 
         x, hists = compute_histogram(example, self.grayscale)
@@ -100,18 +103,18 @@ class HistogramPlotter(Plotter):
                     self.graph.plot(x, hist_oc, name=color.upper(), pen=pen)
                 )
 
-    def _ensure_dim(self, img):
-        if self.grayscale and (img.ndim > 2):
+    def _ensure_dim(self, img: np.ndarray) -> np.ndarray:
+        if self.grayscale and:
             return np.round(img.mean(-1)).astype(np.uint8)
-        elif not self.grayscale and (img.ndim < 3):
+        elif not self.grayscale and:
             return img[..., None].repeat(3, -1)
         return img
 
-    def update(self, frames):
+    def update(self, frames: Sequence[np.ndarray]) -> None:
         """Update plot.
 
         Args:
-            frames (Tuple[np.ndarray]): Frames from video source
+            frames: Frames from video source
         """
         x, hists = compute_histogram(frames[self.frame_index], self.grayscale)
         for line, hist in zip(self.lines, hists):

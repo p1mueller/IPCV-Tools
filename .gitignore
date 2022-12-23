@@ -2,6 +2,7 @@
 *.dot
 *.cti
 __pycache__
+.vscode
 .eggs
 .pytest_cache
 ipcv_tools.egg-info

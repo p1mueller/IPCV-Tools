@@ -73,7 +73,7 @@ class TestAsync:
         self.finished_producing = True
 
     def consuming(self):
-        while (not self.finished_producing) or (self.buffer.not_empty_event.is_set()):
+        while:
             _random_sleep()
             self.consumed_data.append(self.buffer.pop())
 

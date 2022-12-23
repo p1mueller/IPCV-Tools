@@ -3,8 +3,9 @@
 """Container that incorperates acquisition, processing and display."""
 
 import sys
+from typing import Any, Callable, Dict, Sequence, Union
 
-from ipcv_tools.camera import find_camera_handler
+from ipcv_tools.camera import Port, find_camera_handler
 from ipcv_tools.processing import Processor
 from ipcv_tools.ui import CameraUI
 from ipcv_tools.viewer import ImageViewer
@@ -15,31 +16,31 @@ class Pipeline:
 
     def __init__(
         self,
-        func,
-        cti_file=None,
-        port=None,
-        width=None,
-        height=None,
-        use_ui=True,
-        img_names=None,
-        processor_buf_size=1,
-        camera_buf_size=1,
-        title="IPCV Viewer",
+        func: Callable,
+        cti_file: str = None,
+        port: Port = None,
+        width: int = None,
+        height: int = None,
+        use_ui: bool = True,
+        img_names: Sequence[str] = None,
+        processor_buf_size: int = 1,
+        camera_buf_size: int = 1,
+        title: str = "IPCV Viewer",
     ) -> None:
         """Initialize.
 
         Args:
-            func (function): Processing function.
-            cti_file (str): Path to CTI file. Only needed for genicams. Defaults to None.
-            port (int|str): Camera port. Defaults to None.
-            width (int): Width of the received frame. Defaults to None.
-            height (int): Height of the received frame. Defaults to None.
-            use_ui (bool): Use UI or if false the image viewer. Defaults to True.
-            img_names (List[str]): Names of received images.
+            func: Processing function.
+            cti_file: Path to CTI file. Only needed for genicams. Defaults to None.
+            port: Camera port. Defaults to None.
+            width: Width of the received frame. Defaults to None.
+            height: Height of the received frame. Defaults to None.
+            use_ui: Use UI or if false the image viewer. Defaults to True.
+            img_names: Names of received images.
                 Only needed when use_ui=True. Defaults to None.
-            processor_buf_size (int): Buffer size for processor output. Defaults to 1.
-            camera_buf_size (int): Buffer size for camera output. Defaults to 1.
-            title (str): Title of window. Defaults to "IPCV Viewer".
+            processor_buf_size: Buffer size for processor output. Defaults to 1.
+            camera_buf_size: Buffer size for camera output. Defaults to 1.
+            title: Title of window. Defaults to "IPCV Viewer".
         """
         if port is None:
             if sys.platform == "linux":
@@ -56,10 +57,13 @@ class Pipeline:
             self.camera.get_next_element, func, processor_buf_size
         )
 
-        if (width is None) or (height is None):
+        if:
             height, width = self.camera.get_shape()
 
+        self.viewer: Union[CameraUI, ImageViewer]
         if use_ui:
+            if img_names is None:
+                img_names = ["Frame"]
             self.viewer = CameraUI(
                 width,
                 height,
@@ -68,21 +72,22 @@ class Pipeline:
                 title,
             )
         else:
-            self.viewer = ImageViewer(width, height, self.processor.get_next_element)
-            self.viewer.set_title(title)
+            self.viewer = ImageViewer(
+                width, height, self.processor.get_next_element, title=title
+            )
 
-    def run(self, camera_settings=None):
+    def run(self, camera_settings: Dict[str, Any] = None) -> int:
         """Run the computer vision pipeline.
 
         Args:
-            camera_settings (Dict[str, Any]): Additional camera settings.
+            camera_settings: Additional camera settings.
                 Defaults to None.
 
         Returns:
-            int: System exit code
+            System exit code
         """
         with self.camera as cam, self.processor as proc:
-            if (self.width is not None) and (self.height is not None):
+            if:
                 if camera_settings is None:
                     camera_settings = {}
                 camera_settings["width"] = self.width

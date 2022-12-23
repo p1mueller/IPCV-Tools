@@ -6,21 +6,57 @@ import os
 from abc import abstractmethod
 from glob import glob
 from pathlib import Path
+from typing import Any, Optional, Sequence, Type, Union
 
 import cv2
+import numpy as np
 from harvesters.core import Harvester
 
 from ipcv_tools.processing import Worker
 
+Port = Union[int, str]
 
-def find_camera_handler(cti_file=None):
+
+class Capture(Worker):
+    """Abstract capture class.
+
+    Is used as base class for all possible camera interfaces.
+    """
+
+    def __init__(
+        self,
+        port: Port = None,
+        buffer_size: int = 1,
+    ) -> None:
+        """Initialize.
+
+        Args:
+            port: Camera port. Defaults to None.
+            buffer_size: Buffer size. Defaults to 1.
+        """
+        super().__init__(buffer_size)
+        self.port = port
+        self.handler = None
+
+    @abstractmethod
+    def settings(self, **kwargs: Any) -> None:
+        """Set settings of camera."""
+        pass
+
+    @abstractmethod
+    def get_shape(self) -> Sequence[int]:
+        """Get shape of output frames."""
+        pass
+
+
+def find_camera_handler(cti_file: str = None) -> Type[Capture]:
     """Get appropriate camera handler.
 
     Args:
-        cti_file (str): CTI file to use (only when GenICam). Defaults to None.
+        cti_file: CTI file to use (only when GenICam). Defaults to None.
 
     Returns:
-        Capture: Appropriate capture class
+        Appropriate capture class
     """
     geni = GenICam(cti_file=cti_file)
     if len(geni.check_devices()) > 0:
@@ -28,11 +64,11 @@ def find_camera_handler(cti_file=None):
     return Webcam
 
 
-def find_cti_files():
+def find_cti_files() -> Sequence[str]:
     """Find CTI file which defines the interface for the genicam.
 
     Returns:
-        str: Path to file
+        Path to file
     """
     gentl_path = os.getenv("GENICAM_GENTL64_PATH")
     if gentl_path is None:
@@ -46,57 +82,43 @@ def find_cti_files():
     return files
 
 
-class Capture(Worker):
-    """Abstract capture class.
-
-    Is used as base class for all possible camera interfaces.
-    """
-
-    @abstractmethod
-    def settings(self, **kwargs):
-        """Set settings of camera."""
-        pass
-
-    @abstractmethod
-    def get_shape(self):
-        """Get shape of output frames."""
-        return
-
-
 class GenICam(Capture):
     """Class to control a genicam (see https://en.wikipedia.org//wiki/GenICam).
 
     Cameras in the IPCV are genicams.
     """
 
-    def __init__(self, port=None, cti_file=None, buffer_size=1) -> None:
+    def __init__(
+        self,
+        port: Port = None,
+        cti_file: str = None,
+        buffer_size: int = 1,
+    ) -> None:
         """Initialize.
 
         Args:
-            port (int|str): Camera port. Defaults to None.
-            cti_file (str): Path to CTI file. Defaults to None.
-            buffer_size (int): Buffer size. Defaults to 1.
+            port: Camera port. Defaults to None.
+            cti_file: Path to CTI file. Defaults to None.
+            buffer_size: Buffer size. Defaults to 1.
         """
-        super().__init__(buffer_size)
+        super().__init__(port, buffer_size)
         if cti_file is None:
             files = find_cti_files()
             if len(files) > 0:
                 cti_file = files[0]
             else:
                 root = Path(__file__).parent
-                cti_file = root / "mvGenTLProducer.cti"
+                cti_file = str(root / "mvGenTLProducer.cti")
         assert os.path.exists(cti_file)
 
-        self.port = port
         self.cti_file = cti_file
         self.harvester = None
-        self.handler = None
 
-    def check_devices(self):
+    def check_devices(self) -> Sequence[Any]:
         """Check if genicam devices are found.
 
         Returns:
-            List[str]: Available genicam devices.
+            Available genicam devices.
         """
         with Harvester() as harvester:
             harvester.add_file(str(self.cti_file))
@@ -104,15 +126,18 @@ class GenICam(Capture):
             device_info = harvester.device_info_list
         return device_info
 
-    def __enter__(self):
+    def __enter__(self) -> Capture:
         self.harvester = Harvester()
+        assert self.harvester is not None
         self.harvester.add_file(str(self.cti_file))
         self.harvester.update()
         self.handler = self.harvester.create(self.port)
+        assert self.handler is not None
         self.handler.keep_latest = True
         return super().__enter__()
 
-    def _acquire_element(self):
+    def _acquire_element(self) -> np.ndarray:
+        assert self.handler is not None
         with self.handler.fetch(timeout=1.0) as buffer:
             component = buffer.payload.components[0]
             img = component.data.reshape(component.height, component.width, 3).copy()
@@ -120,14 +145,16 @@ class GenICam(Capture):
 
     def settings(
         self,
-        width=None,  # TODO: See how it is handled
-        height=None,
-        decimation=None,
-        gain=None,
-        exposure=None,
-        pixel_format="RGB8",
-    ):
+        width: int = None,  # TODO: See how it is handled
+        height: int = None,
+        decimation: int = None,
+        gain: float = None,
+        exposure: float = None,
+        pixel_format: str = "RGB8",
+        **kwargs: Any,
+    ) -> None:
         """Set settings of camera."""
+        assert self.handler is not None
         node_map = self.handler.remote_device.node_map
         node_map.PixelFormat.value = pixel_format
         if decimation is not None:
@@ -139,27 +166,29 @@ class GenICam(Capture):
         if exposure is not None:
             node_map.ExposureTime = exposure  # TODO: What type and range?
 
-    def get_shape(self):
+    def get_shape(self) -> Sequence[int]:
         """Get shape of frames.
 
         Returns:
-            Tuple[int]: Shape of frames (Channels are leftout).
+            Shape of frames (Channels are leftout).
         """
+        assert self.handler is not None
         node_map = self.handler.remote_device.node_map
         height = node_map.Height.value
         width = node_map.Width.value
         return (height, width)
 
-    def start(self):
+    def start(self) -> None:
         """Start capturing of frames from camera."""
         assert self.harvester is not None
         assert self.handler is not None
         self.handler.start()
         super().start()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop capturing frames from camera."""
         super().stop()
+        assert self.handler is not None
         self.handler.stop()
         self.handler.destroy()
         self.harvester.reset()
@@ -175,43 +204,35 @@ class Webcam(Capture):
         "exposure": cv2.CAP_PROP_EXPOSURE,
     }
 
-    def __init__(self, port=None, buffer_size=1) -> None:
-        """Initialize.
-
-        Args:
-            port (int|str): Camera port. Defaults to None.
-            buffer_size (int): Buffer size. Defaults to 1.
-        """
-        super().__init__(buffer_size)
-        self.port = port
-        self.handler = None
-
-    def __enter__(self):
+    def __enter__(self) -> Capture:
         self.handler = cv2.VideoCapture(self.port)
+        assert self.handler is not None
         self.handler.set(
             cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G")
         )
         return super().__enter__()
 
-    def _acquire_element(self):
+    def _acquire_element(self) -> Optional[np.ndarray]:
+        assert self.handler is not None
         ret, frame = self.handler.read()
         if ret:
             return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         self.stop()
         return None
 
-    def get_shape(self):
+    def get_shape(self) -> Sequence[int]:
         """Get shape of frames.
 
         Returns:
-            Tuple[int]: Shape of frames (Channels are leftout).
+            Shape of frames (Channels are leftout).
         """
+        assert self.handler is not None
         height, width = [
             self.handler.get(self._settings_map[k]) for k in ["height", "width"]
         ]
         return (height, width)
 
-    def settings(self, **kwargs):
+    def settings(self, **kwargs: Any) -> None:
         """Set settings of camera."""
         assert self.handler is not None
         for key, value in kwargs.items():
@@ -220,7 +241,8 @@ class Webcam(Capture):
                 continue
             self.handler.set(cv_key, value)
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop capturing frames from camera."""
+        assert self.handler is not None
         super().stop()
         self.handler.release()

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Viewer to display frames from a video source."""
 
+from typing import Any, Callable, Dict
+
 import numpy as np
 import pygame
 
@@ -11,7 +13,7 @@ from ipcv_tools.utilities import FPS
 class _Font:
     defaults = {"name": "freesansbold.ttf", "size": 24, "color": (0, 0, 255)}
 
-    def __init__(self, values) -> None:
+    def __init__(self, values: Dict[str, Any] = None) -> None:
         if values is None:
             values = {}
         params = {}
@@ -19,21 +21,29 @@ class _Font:
             params[k] = values.get(k, v)
         self.params = params
 
-    def as_dict(self):
+    def as_dict(self) -> Dict[str, Any]:
         return self.params
 
 
 class ImageViewer:
     """Display video stream with pygame."""
 
-    def __init__(self, width, height, func, font=None):
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        func: Callable,
+        font: Dict[str, Any] = None,
+        title: str = "IPCV Viewer",
+    ) -> None:
         """Initialize.
 
         Args:
-            width (int): Width of images
-            height (int): Height of images
-            func (function): Function to get next frame from video stream
-            font (Dict[str, Any]): Font to display FPS. Defaults to None.
+            width: Width of images
+            height: Height of images
+            func: Function to get next frame from video stream
+            font: Font to display FPS. Defaults to None.
+            title: Window title. Defaults to "IPCV Viewer".
         """
         parsed_font = _Font(font).as_dict()
         pygame.init()
@@ -52,19 +62,20 @@ class ImageViewer:
         size = self.display.get_size()
         self.txt_coord = (size[0] - 1.05 * rect.width, size[1] - 1.05 * rect.height)
         self.update(np.zeros((height, width, 3), np.uint8))
+        self.set_title(title)
 
-    def _create_fps_text(self):
+    def _create_fps_text(self) -> pygame.surface.Surface:
         return self.font.render(f"FPS: {self.fps.value:5.1f}", True, self.font_color)
 
-    def is_running(self):
+    def is_running(self) -> bool:
         """Get if running.
 
         Returns:
-            bool: Is running
+            Is running
         """
         return not self.quit
 
-    def set_title(self, title):
+    def set_title(self, title: str) -> None:
         """Set window title.
 
         Args:
@@ -72,7 +83,7 @@ class ImageViewer:
         """
         pygame.display.set_caption(title)
 
-    def update(self, img):
+    def update(self, img: np.ndarray) -> None:
         """Update displayed image.
 
         Args:
@@ -89,12 +100,12 @@ class ImageViewer:
         pygame.display.update()
         self.fps.update()
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop viewing process."""
         self.quit = True
         pygame.quit()
 
-    def run(self):
+    def run(self) -> int:
         """Run the acquisition process."""
         while self.is_running():
             frames = self.func()
@@ -103,14 +114,15 @@ class ImageViewer:
             else:
                 frame = frames
             self.update(frame)
-        return
+        return 0
 
 
 if __name__ == "__main__":
     size = (600, 600)
 
-    def _random_noise_img():
-        image = np.random.random(size + (3,)) * 255.0
+    def _random_noise_img() -> np.ndarray:
+        image = np.random.random(size + (3,))
+        image *= 255
         return image.astype("uint8")
 
     viewer = ImageViewer(*size, _random_noise_img)

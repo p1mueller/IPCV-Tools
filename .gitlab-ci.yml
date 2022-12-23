@@ -1,8 +1,5 @@
 image: python:3.8.10
 
-before_script:
-  - python3 -m pip install -e .
-
 dependencies:
   stage: build
   script:
@@ -15,6 +12,8 @@ dependencies:
 
 pytest:
   stage: test
+  before_script:
+    - python3 -m pip install -e .
   script:
     - python3 -m pip install pytest
     - pytest tests
@@ -22,6 +21,5 @@ pytest:
 flake8:
   stage: test
   script:
-    - python3 -m pip install flake8 flake8-docstring
-    - flake8 --max-line-length=90 --ignore=E203,D202,D105,W503 \
-      --docstring-convention=google .
+    - python3 -m pip install flake8 flake8-docstrings
+    - flake8 --max-line-length=90 --ignore=E203,D202,D105,W503 --docstring-convention=google ipcv_tools examples

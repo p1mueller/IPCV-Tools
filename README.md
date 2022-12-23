@@ -8,7 +8,7 @@ python3 -m pip install -e .
 ```
 
 ## Project Structure
-![Dependencies](https://gitlab.ost.ch/patrik.mueller/ipcv-tools/-/jobs/artifacts/master/raw/dependencies.png?job=build)
+![Dependencies](https://gitlab.ost.ch/patrik.mueller/ipcv-tools/-/jobs/artifacts/master/raw/dependencies.png?job=dependencies)
 
 ## Examples
 See `examples` folder.

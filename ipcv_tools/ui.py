@@ -351,7 +351,7 @@ class CameraUI(QtWidgets.QWidget):
         null_img = np.ones((self._height, self._width, 3), np.uint8)
         plotter.set_graph(graph, null_img)
         self.video_thread.changed_image.connect(plotter.update)
-        if:
+        if (signal is not None) and (func is not None):
             signal.connect(func)
         return graph
 

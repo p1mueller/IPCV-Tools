@@ -57,7 +57,7 @@ class Pipeline:
             self.camera.get_next_element, func, processor_buf_size
         )
 
-        if:
+        if (width is None) or (height is None):
             height, width = self.camera.get_shape()
 
         self.viewer: Union[CameraUI, ImageViewer]

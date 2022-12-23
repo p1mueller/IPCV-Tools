@@ -104,9 +104,9 @@ class HistogramPlotter(Plotter):
                 )
 
     def _ensure_dim(self, img: np.ndarray) -> np.ndarray:
-        if self.grayscale and:
+        if self.grayscale and (img.ndim > 2):
             return np.round(img.mean(-1)).astype(np.uint8)
-        elif not self.grayscale and:
+        elif not self.grayscale and (img.ndim < 3):
             return img[..., None].repeat(3, -1)
         return img
 

@@ -1,0 +1,8 @@
+*.png
+*.dot
+*.cti
+__pycache__
+.eggs
+.pytest_cache
+ipcv_tools.egg-info
+.doit.db

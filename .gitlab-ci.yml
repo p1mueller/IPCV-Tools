@@ -18,8 +18,8 @@ pytest:
     - python3 -m pip install pytest
     - pytest tests
 
-flake8:
+codestyle:
   stage: test
   script:
-    - python3 -m pip install flake8 flake8-docstrings
-    - flake8 --max-line-length=90 --ignore=E203,D202,D105,W503 --docstring-convention=google ipcv_tools examples
+    - python3 -m pip install flake8 flake8-docstrings mypy isort
+    - bash codestyle.sh

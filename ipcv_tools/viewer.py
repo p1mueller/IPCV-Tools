@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 """Viewer to display frames from a video source."""
 
+from threading import Event
 from typing import Any, Callable, Dict
 
 import numpy as np
 import pygame
-from threading import Event
 
 from ipcv_tools.utilities import FPS
 

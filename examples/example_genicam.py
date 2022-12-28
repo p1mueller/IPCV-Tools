@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 """Show case the GenICam class."""
 
+from argparse import ArgumentParser
+
 import numpy as np
 
 from ipcv_tools.camera import GenICam
@@ -18,25 +20,26 @@ def _get_frame() -> np.ndarray:
     return res_img
 
 
-port = None
-factor = 0.4
-decimation = 2
+parser = ArgumentParser()
+parser.add_argument("-d", "--decimation", default=1, type=int)
+args = parser.parse_args()
+
 original_height = 1536
 original_width = 2048
-height = original_height // decimation
-width = original_width // decimation
+height = original_height // args.decimation
+width = original_width // args.decimation
 
 gamma = 0.5
 r = np.arange(256)
 mapping = 255 ** (1 - gamma) * r**gamma  # gamma
-# transform = 255 * (0.5 - 0.5 * np.cos(2 * np.pi * r / 255))  # Hann
+# mapping = 255 * (0.5 - 0.5 * np.cos(2 * np.pi * r / 255))  # Hann
 mapping = np.array(mapping, dtype="uint8")
 
 with GenICam() as cam:
     assert cam.handler is not None
     node_map = cam.handler.remote_device.node_map
-    node_map.DecimationHorizontal.value = decimation
-    node_map.DecimationVertical.value = decimation
+    node_map.DecimationHorizontal.value = args.decimation
+    node_map.DecimationVertical.value = args.decimation
     node_map.Width.value = width
     node_map.Height.value = height
     node_map.PixelFormat.value = "RGB8"

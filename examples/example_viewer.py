@@ -92,17 +92,23 @@ class ContourResampler:
 
 
 if __name__ == "__main__":
+    from argparse import ArgumentParser
+
     from ipcv_tools.pipeline import Pipeline
 
+    parser = ArgumentParser()
+    parser.add_argument("-d", "--decimation", default=1, type=int)
+    parser.add_argument("-c", "--coefficients", default=0.4, type=float)
+    parser.add_argument("-s", "--sigma", default=3.0, type=float)
+    args = parser.parse_args()
+
     port = "/dev/video0"
-    factor = 0.4
-    decimation = 1
     original_width = 1920
     original_height = 1080
-    height = original_height // decimation
-    width = original_width // decimation
+    height = original_height // args.decimation
+    width = original_width // args.decimation
 
-    contour_resampler = ContourResampler()
+    contour_resampler = ContourResampler(args.coefficients, args.sigma)
     pipeline = Pipeline(
         contour_resampler.__call__, port=port, width=width, height=height, use_ui=False
     )

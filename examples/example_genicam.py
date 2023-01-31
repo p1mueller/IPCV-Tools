@@ -7,7 +7,7 @@ from typing import Sequence, Union
 
 import numpy as np
 
-from ipcv_tools.camera import GenICam, Webcam
+from ipcv_tools.camera import GenICam
 from ipcv_tools.ui import CameraUI
 from ipcv_tools.viewer import ImageViewer
 

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Viewer to display frames from a video source."""
 
+from threading import Event
 from typing import Any, Callable, Dict
 
 import numpy as np
@@ -47,7 +48,7 @@ class ImageViewer:
         """
         parsed_font = _Font(font).as_dict()
         pygame.init()
-        self.quit = False
+        self.quit = Event()
         self.fps = FPS()
         self.width = width
         self.height = height
@@ -73,7 +74,7 @@ class ImageViewer:
         Returns:
             Is running
         """
-        return not self.quit
+        return not self.quit.is_set()
 
     def set_title(self, title: str) -> None:
         """Set window title.
@@ -95,15 +96,15 @@ class ImageViewer:
         self.display.blits([(surf, (0, 0)), (text, self.txt_coord)])
 
         events = pygame.event.get()
-        self.quit = any([e.type == pygame.QUIT for e in events])
+        if any([e.type == pygame.QUIT for e in events]):
+            self.quit.set()
 
         pygame.display.update()
         self.fps.update()
 
     def stop(self) -> None:
         """Stop viewing process."""
-        self.quit = True
-        pygame.quit()
+        self.quit.set()
 
     def run(self) -> int:
         """Run the acquisition process."""
@@ -114,17 +115,48 @@ class ImageViewer:
             else:
                 frame = frames
             self.update(frame)
+        pygame.quit()
         return 0
 
 
 if __name__ == "__main__":
-    size = (600, 600)
+    import matplotlib.pyplot as plt
+    from skimage.exposure import histogram
 
     def _random_noise_img() -> np.ndarray:
         image = np.random.random(size + (3,))
-        image *= 255
+        image *= 255.999
         return image.astype("uint8")
 
-    viewer = ImageViewer(*size, _random_noise_img)
+    def _run() -> np.ndarray:
+        frame = _random_noise_img()
+        hist, _ = histogram(
+            frame, source_range="dtype", normalize=True, channel_axis=-1
+        )
+        for line, hist_i in zip(lines, hist):
+            line.set_ydata(hist_i)
+        if plt.fignum_exists(fig.number):
+            fig.canvas.draw()
+            fig.canvas.flush_events()
+        else:
+            viewer.stop()
+        return frame
+
+    fig_num = 1
+    size = (600, 600)
+
+    hist, mids = histogram(
+        _random_noise_img(), source_range="dtype", normalize=True, channel_axis=-1
+    )
+    fig, ax = plt.subplots(num=fig_num, clear=True, constrained_layout=True)
+    lines = []
+    for hist_i, color in zip(hist, ["r", "g", "b"]):
+        lines.extend(ax.plot(mids, hist_i))
+    ax.grid(1)
+    ax.set_xlim(-0.5, 255.5)
+    ax.set_ylim(0, None)
+    plt.show(block=False)
+
+    viewer = ImageViewer(*size, _run)
     viewer.set_title("Random Noise")
     viewer.run()

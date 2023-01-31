@@ -94,9 +94,9 @@ class ContourResampler:
 if __name__ == "__main__":
     from ipcv_tools.pipeline import Pipeline
 
-    port = "/dev/video0"
+    port = None
     factor = 0.4
-    decimation = 1
+    decimation = 2
     original_width = 1920
     original_height = 1080
     height = original_height // decimation
@@ -106,4 +106,4 @@ if __name__ == "__main__":
     pipeline = Pipeline(
         contour_resampler.__call__, port=port, width=width, height=height, use_ui=False
     )
-    pipeline.run()
+    pipeline.run({"decimation": decimation, "width": width, "height": height})

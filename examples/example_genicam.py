@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """Show case the GenICam class."""
 
+import cv2
 import numpy as np
 
 from ipcv_tools.camera import GenICam
+from ipcv_tools.ui import CameraUI
 from ipcv_tools.viewer import ImageViewer
 
 
@@ -14,8 +16,7 @@ def _get_frame() -> np.ndarray:
     f = np.round(f).astype("uint8")  # Convert to uint8
 
     g = mapping[f]
-    res_img = np.repeat(np.expand_dims(g, -1), 3, -1)
-    return res_img
+    return frame, f, g
 
 
 port = None
@@ -31,17 +32,20 @@ r = np.arange(256)
 mapping = 255 ** (1 - gamma) * r**gamma  # gamma
 # transform = 255 * (0.5 - 0.5 * np.cos(2 * np.pi * r / 255))  # Hann
 mapping = np.array(mapping, dtype="uint8")
-
 with GenICam() as cam:
     assert cam.handler is not None
     node_map = cam.handler.remote_device.node_map
-    node_map.DecimationHorizontal.value = decimation
-    node_map.DecimationVertical.value = decimation
-    node_map.Width.value = width
-    node_map.Height.value = height
-    node_map.PixelFormat.value = "RGB8"
+    node_map.Gain.set_value(0.0)
+    node_map.ExposureTime.set_value(1e4)
+    node_map.DecimationHorizontal.set_value(decimation)
+    node_map.DecimationVertical.set_value(decimation)
+    node_map.Width.set_value(node_map.Width.max)
+    node_map.Height.set_value(node_map.Height.max)
+    node_map.PixelFormat.set_value("RGB8")
 
-    viewer = ImageViewer(height, 2 * width, _get_frame, font={"color": (0, 0, 255)})
+    viewer = CameraUI(
+        width, height, ["Original", "Grayscale", "Transformed"], _get_frame
+    )
     cam.start()
 
     viewer.run()

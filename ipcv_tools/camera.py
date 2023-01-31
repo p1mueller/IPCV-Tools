@@ -123,7 +123,7 @@ class GenICam(Capture):
         with Harvester() as harvester:
             harvester.add_file(str(self.cti_file))
             harvester.update()
-            device_info = harvester.device_info_list
+            device_info = harvester.device_info_list.copy()
         return device_info
 
     def __enter__(self) -> Capture:
@@ -138,33 +138,40 @@ class GenICam(Capture):
 
     def _acquire_element(self) -> np.ndarray:
         assert self.handler is not None
-        with self.handler.fetch(timeout=1.0) as buffer:
+        with self.handler.fetch(timeout=5.0) as buffer:
             component = buffer.payload.components[0]
             img = component.data.reshape(component.height, component.width, 3).copy()
         return img
 
     def settings(
         self,
-        width: int = None,  # TODO: See how it is handled
-        height: int = None,
         decimation: int = None,
         gain: float = None,
         exposure: float = None,
         pixel_format: str = "RGB8",
         **kwargs: Any,
     ) -> None:
-        """Set settings of camera."""
+        """Set settings of camera.
+
+        Args:
+            decimation: Decimation factor. Range 1 - 4. Defaults to None.
+            gain: Gain in dB. Range 0.0 - 28.0. Defaults to None.
+            exposure: Exposure time in us. Range 30.0 - 1000000.0. Defaults to None.
+            pixel_format: Format of pixels. "RGB8" recommended. Defaults to None.
+        """
         assert self.handler is not None
         node_map = self.handler.remote_device.node_map
-        node_map.PixelFormat.value = pixel_format
+        if pixel_format is not None:
+            node_map.PixelFormat.set_value(pixel_format)
         if decimation is not None:
-            node_map.DecimationHorizontal.value = decimation
-            node_map.DecimationVertical.value = decimation
-            # TODO: Must width and height also be set?
+            node_map.DecimationHorizontal.set_value(decimation)
+            node_map.DecimationVertical.set_value(decimation)
+            node_map.Width.set_value(node_map.Width.max)
+            node_map.Height.set_value(node_map.Height.max)
         if gain is not None:
-            node_map.Gain.value = gain  # TODO: What type and range?
+            node_map.Gain.set_value(float(gain))
         if exposure is not None:
-            node_map.ExposureTime = exposure  # TODO: What type and range?
+            node_map.ExposureTime.set_value(float(exposure))
 
     def get_shape(self) -> Sequence[int]:
         """Get shape of frames.

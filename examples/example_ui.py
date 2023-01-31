@@ -16,7 +16,9 @@ sigma = 3.0
 
 parser = ArgumentParser()
 parser.add_argument("-d", "--decimation", default=1, type=int)
-parser.add_argument("-g", "--grayscale", action="store_true")
+parser.add_argument("-e", "--exposure", default=1e4, type=float)
+parser.add_argument("-g", "--gain", default=0.0, type=float)
+parser.add_argument("-m", "--monochrome", action="store_true")
 args = parser.parse_args()
 
 decimation = args.decimation
@@ -48,8 +50,15 @@ if isinstance(pipeline.viewer, CameraUI):
         value=factor,
     )
 
-    hist_plotter = HistogramPlotter(0, args.grayscale)
+    hist_plotter = HistogramPlotter(0, args.monochrome)
     graph = pipeline.viewer.add_plot("Histogram", hist_plotter)
-
-ret = pipeline.run()
+ret = pipeline.run(
+    {
+        "decimation": args.decimation,
+        "width": width,
+        "height": height,
+        "exposure": args.exposure,
+        "gain": args.gain,
+    }
+)
 sys.exit(ret)

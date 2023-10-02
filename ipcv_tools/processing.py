@@ -24,7 +24,7 @@ class Worker(ABC):
         self.started = False
         self.buffer = Buffer(buffer_size)
         self.thread = threading.Thread(target=self._run)
-        self.thread.setDaemon(daemonic)
+        self.thread.daemon = daemonic
         self.stop_event = threading.Event()
 
     def __enter__(self) -> Any:

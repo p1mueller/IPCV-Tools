@@ -217,7 +217,7 @@ class Webcam(Capture):
         self.handler: Optional[cv2.VideoCapture]
         if self.port is None:
             self.handler = cv2.VideoCapture()
-        elif type(self.port) == int:
+        elif isinstance(self.port, int):
             self.handler = cv2.VideoCapture(index=self.port)
         else:
             self.handler = cv2.VideoCapture(self.port)

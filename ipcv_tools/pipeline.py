@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Container that incorperates acquisition, processing and display."""
 
-import sys
 from typing import Any, Callable, Dict, Optional, Sequence, Union
 
 from ipcv_tools.camera import Port, find_camera_handler
@@ -42,16 +41,11 @@ class Pipeline:
             camera_buf_size: Buffer size for camera output. Defaults to 1.
             title: Title of window. Defaults to "IPCV Viewer".
         """
-        if port is None:
-            if sys.platform == "linux":
-                port = "/dev/video0"
-            else:
-                port = 0
 
         self.width = width
         self.height = height
 
-        cam_handler = find_camera_handler(cti_file)
+        cam_handler = find_camera_handler(port, cti_file)
         self.camera = cam_handler(port, buffer_size=camera_buf_size)
         self.processor = Processor(self.camera.get_next_element, func, processor_buf_size)
 

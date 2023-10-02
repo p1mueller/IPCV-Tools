@@ -3,6 +3,7 @@
 """Camera interfaces for easy use."""
 
 import os
+import sys
 from abc import abstractmethod
 from glob import glob
 from pathlib import Path
@@ -49,7 +50,9 @@ class Capture(Worker):
         pass
 
 
-def find_camera_handler(cti_file: Optional[str] = None) -> Type[Capture]:
+def find_camera_handler(
+    port: Optional[Port] = None, cti_file: Optional[str] = None
+) -> Type[Capture]:
     """Get appropriate camera handler.
 
     Args:
@@ -58,7 +61,7 @@ def find_camera_handler(cti_file: Optional[str] = None) -> Type[Capture]:
     Returns:
         Appropriate capture class
     """
-    geni = GenICam(cti_file=cti_file)
+    geni = GenICam(port=port, cti_file=cti_file)
     if len(geni.check_devices()) > 0:
         return GenICam
     return Webcam
@@ -212,6 +215,14 @@ class Webcam(Capture):
         "gain": cv2.CAP_PROP_GAIN,
         "exposure": cv2.CAP_PROP_EXPOSURE,
     }
+
+    def __init__(self, port: Port | None = None, buffer_size: int = 1) -> None:
+        if port is None:
+            if sys.platform == "linux":
+                port = "/dev/video0"
+            else:
+                port = 0
+        super().__init__(port, buffer_size)
 
     def __enter__(self) -> Capture:
         self.handler: Optional[cv2.VideoCapture]

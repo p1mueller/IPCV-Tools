@@ -1,10 +1,12 @@
-image: python:3.8.10
+defaults: 
+  image: python:3.8.10
+  before_script:
+    - apt update && apt install -y graphviz graphviz-dev
+    - python3 -m pip install doit pygraphviz import_deps
 
 dependencies:
   stage: build
   script:
-    - apt update && apt install -y graphviz graphviz-dev
-    - python3 -m pip install doit pygraphviz import_deps
     - doit -n 5 -P thread uml draw
   artifacts:
     paths:
@@ -13,9 +15,8 @@ dependencies:
 
 python:
   stage: test
-  before_script:
-    - python3 -m pip install ".[dev]"
   script:
+    - python3 -m pip install ".[dev]"
     - doit codestyle
     - doit test
 

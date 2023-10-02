@@ -3,7 +3,7 @@
 """Container that incorperates acquisition, processing and display."""
 
 import sys
-from typing import Any, Callable, Dict, Sequence, Union
+from typing import Any, Callable, Dict, Optional, Sequence, Union
 
 from ipcv_tools.camera import Port, find_camera_handler
 from ipcv_tools.processing import Processor
@@ -17,12 +17,12 @@ class Pipeline:
     def __init__(
         self,
         func: Callable,
-        cti_file: str = None,
-        port: Port = None,
-        width: int = None,
-        height: int = None,
-        use_ui: bool = True,
-        img_names: Sequence[str] = None,
+        cti_file: Optional[str] = None,
+        port: Optional[Port] = None,
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        use_ui: Optional[bool] = True,
+        img_names: Optional[Sequence[str]] = None,
         processor_buf_size: int = 1,
         camera_buf_size: int = 1,
         title: str = "IPCV Viewer",
@@ -53,9 +53,7 @@ class Pipeline:
 
         cam_handler = find_camera_handler(cti_file)
         self.camera = cam_handler(port, buffer_size=camera_buf_size)
-        self.processor = Processor(
-            self.camera.get_next_element, func, processor_buf_size
-        )
+        self.processor = Processor(self.camera.get_next_element, func, processor_buf_size)
 
         if (width is None) or (height is None):
             height, width = self.camera.get_shape()
@@ -76,7 +74,7 @@ class Pipeline:
                 width, height, self.processor.get_next_element, title=title
             )
 
-    def run(self, camera_settings: Dict[str, Any] = None) -> int:
+    def run(self, camera_settings: Optional[Dict[str, Any]] = None) -> int:
         """Run the computer vision pipeline.
 
         Args:

@@ -4,7 +4,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Callable, Sequence, Tuple
+from typing import Any, Callable, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,7 +14,7 @@ from PyQt5.QtCore import QObject, Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
 
 from ipcv_tools.plotting import Plotter
-from ipcv_tools.utilities import FPS
+from ipcv_tools.utilities import FPS, fix_cv2_issue
 
 
 def array_to_qimage(array: np.ndarray) -> QImage:
@@ -51,7 +51,7 @@ class Slider(QtWidgets.QWidget):
         min_val: float = 0,
         max_val: float = 1,
         steps: int = 100,
-        value: float = None,
+        value: Optional[float] = None,
         width: int = 300,
         height: int = 10,
     ) -> None:
@@ -168,6 +168,7 @@ class CameraUI(QtWidgets.QWidget):
             source: Video source pipeline.
             title: Window title. Defaults to "IPCV Cam".
         """
+        fix_cv2_issue()
         self.app = QtWidgets.QApplication(sys.argv)
 
         super().__init__()
@@ -291,8 +292,8 @@ class CameraUI(QtWidgets.QWidget):
         steps: int = 100,
         width: int = 300,
         height: int = 10,
-        func: Callable = None,
-        value: float = None,
+        func: Optional[Callable] = None,
+        value: Optional[float] = None,
     ) -> Slider:
         """Add a slider to the right side of the UI.
 
@@ -316,14 +317,41 @@ class CameraUI(QtWidgets.QWidget):
             slider.value_changed.connect(func)
         return slider
 
+    def add_checkbox(
+        self,
+        name: str,
+        width: int = 100,
+        height: int = 10,
+        func: Optional[Callable] = None,
+        value: bool = False,
+    ) -> QtWidgets.QCheckBox:
+        """Add a checkbox to the right side of the UI.
+
+        Args:
+            name: Name of checkbox. Also acts as label
+            width: Minimum width of the slider. Defaults to 300.
+            height: Minimal height of the slider. Defaults to 10.
+            func: Callback function when checkbox value changes.
+                Defaults to None.
+            value: Initial state of checkbox. Defaults to False.
+        """
+        checkbox = QtWidgets.QCheckBox()
+        checkbox.setText(name)
+        checkbox.setMinimumSize(width, height)
+        checkbox.setChecked(value)
+        if func is not None:
+            checkbox.stateChanged.connect(func)
+        self.tools_layout.addWidget(checkbox)
+        return checkbox
+
     def add_plot(
         self,
         name: str,
         plotter: Plotter,
         width: int = 400,
         height: int = 150,
-        signal: Any = None,
-        func: Callable = None,
+        signal: Optional[Any] = None,
+        func: Optional[Callable] = None,
     ) -> pg.PlotWidget:
         """Add plot widget to the right side ot the UI.
 
@@ -381,18 +409,14 @@ if __name__ == "__main__":
         def set_std(self, value: float) -> None:
             self.std = value
 
-    viewer = CameraUI(
-        *size[::-1], ["Uniform Noise", "Gaussian Noise"], _random_noise_img
-    )
+    viewer = CameraUI(*size[::-1], ["Uniform Noise", "Gaussian Noise"], _random_noise_img)
 
     noises = []
     for c in ["R", "G", "B"]:
         noise = _Noise(
             np.random.randint(50, 205), np.random.uniform(min_sigma, max_sigma)
         )
-        viewer.add_slider(
-            f"{c} Mean", 0, 255, 256, func=noise.set_mean, value=noise.mean
-        )
+        viewer.add_slider(f"{c} Mean", 0, 255, 256, func=noise.set_mean, value=noise.mean)
         viewer.add_slider(
             f"{c} STD", min_sigma, max_sigma, 100, func=noise.set_std, value=noise.std
         )

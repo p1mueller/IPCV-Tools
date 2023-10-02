@@ -1,25 +1,21 @@
 image: python:3.8.10
+before_script:
+  - apt update && apt install -y graphviz graphviz-dev
+  - python3 -m pip install doit pygraphviz import_deps pylint
 
 dependencies:
   stage: build
   script:
-    - apt update && apt install -y graphviz graphviz-dev
-    - python3 -m pip install doit pygraphviz import_deps
-    - doit
+    - doit -n 5 -P thread uml draw
   artifacts:
     paths:
       - dependencies.png
+      - classes.png
 
-pytest:
-  stage: test
-  before_script:
-    - python3 -m pip install -e .
-  script:
-    - python3 -m pip install pytest
-    - pytest tests
-
-codestyle:
+python:
   stage: test
   script:
-    - python3 -m pip install flake8 flake8-docstrings mypy==0.971 isort
-    - bash codestyle.sh
+    - python3 -m pip install -e ".[dev]"
+    - doit codestyle
+    - doit test
+

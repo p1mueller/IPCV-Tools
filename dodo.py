@@ -4,6 +4,7 @@ import pathlib
 from glob import glob
 
 import pygraphviz
+from doit.tools import run_once
 from import_deps import ModuleSet
 
 DOIT_CONFIG = {
@@ -12,7 +13,10 @@ DOIT_CONFIG = {
 
 node_color = "#d0a9d0"
 output_name = "dependencies"
-base_path = pathlib.Path("ipcv_tools")
+root = pathlib.Path(__file__).parent
+base_path = root / "ipcv_tools"
+test_path = root / "tests"
+example_path = root / "examples"
 modules = [
     path for path in base_path.glob("**/*.py") if pathlib.Path(path).stem != "__init__"
 ]
@@ -21,7 +25,7 @@ PKG_MODULES = ModuleSet(modules)
 
 def _find_py_files(folders=None):
     if folders is None:
-        folders = ["examples", "ipcv_tools"]
+        folders = [base_path, test_path, example_path]
     files = []
     for folder in folders:
         files.extend(glob(f"{folder}/*.py"))
@@ -96,16 +100,28 @@ def task_uml():
     return {
         "file_dep": files,
         "targets": ["classes.png"],
-        "actions": [f"pyreverse -my -o png {folder}/**.py"],
+        "actions": [f"pyreverse -k -my -o png {folder}/**.py"],
     }
 
 
 def task_codestyle():
     """Ensure proper codestyle."""
     files = _find_py_files()
+    files += [root / "codestyle.sh"]
     return {
         "file_dep": files,
-        "actions": ["isort -q .", "black -q ."],
+        "uptodate": [run_once],
+        "actions": ["bash codestyle.sh"],
+    }
+
+
+def task_test():
+    """Run package tests."""
+    files = _find_py_files([base_path, test_path])
+    return {
+        "file_dep": files,
+        "actions": [f"pytest -v {test_path}"],
+        "uptodate": [run_once],
     }
 
 

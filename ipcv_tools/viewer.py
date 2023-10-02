@@ -3,7 +3,7 @@
 """Viewer to display frames from a video source."""
 
 from threading import Event
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 import numpy as np
 import pygame
@@ -14,7 +14,7 @@ from ipcv_tools.utilities import FPS
 class _Font:
     defaults = {"name": "freesansbold.ttf", "size": 24, "color": (0, 0, 255)}
 
-    def __init__(self, values: Dict[str, Any] = None) -> None:
+    def __init__(self, values: Optional[Dict[str, Any]] = None) -> None:
         if values is None:
             values = {}
         params = {}
@@ -34,7 +34,7 @@ class ImageViewer:
         width: int,
         height: int,
         func: Callable,
-        font: Dict[str, Any] = None,
+        font: Optional[Dict[str, Any]] = None,
         title: str = "IPCV Viewer",
     ) -> None:
         """Initialize.
@@ -130,9 +130,7 @@ if __name__ == "__main__":
 
     def _run() -> np.ndarray:
         frame = _random_noise_img()
-        hist, _ = histogram(
-            frame, source_range="dtype", normalize=True, channel_axis=-1
-        )
+        hist, _ = histogram(frame, source_range="dtype", normalize=True, channel_axis=-1)
         for line, hist_i in zip(lines, hist):
             line.set_ydata(hist_i)
         if plt.fignum_exists(fig.number):

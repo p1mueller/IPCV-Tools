@@ -2,8 +2,10 @@
 
 import setuptools
 
+name = "ipcv_tools"
+packages = setuptools.find_packages(include=name)
 setuptools.setup(
-    name="ipcv_tools",
+    name=name,
     version="0.0.1",
     python_requires=">=3.6",
     install_requires=[
@@ -17,5 +19,19 @@ setuptools.setup(
         "scikit-image",
         "scipy",
     ],
-    tests_require=["pytest", "mypy==0.971", "isort", "flake8", "flake8-docstrings"],
+    packages=packages,
+    extras_require={
+        "dev": [
+            "black",
+            "pytest",
+            "mypy==1.0.0",
+            "isort",
+            "flake8",
+            "flake8-docstrings",
+            "pygraphviz",
+            "import_deps",
+            "PyQt5-stubs",
+            "doit",
+        ]
+    },
 )

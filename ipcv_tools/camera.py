@@ -216,7 +216,7 @@ class Webcam(Capture):
         "exposure": cv2.CAP_PROP_EXPOSURE,
     }
 
-    def __init__(self, port: Port | None = None, buffer_size: int = 1) -> None:
+    def __init__(self, port: Optional[Port] = None, buffer_size: int = 1) -> None:
         """Initialize.
 
         Args:

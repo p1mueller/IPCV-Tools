@@ -17,5 +17,14 @@ setuptools.setup(
         "scikit-image",
         "scipy",
     ],
-    tests_require=["pytest", "mypy==0.971", "isort", "flake8", "flake8-docstrings"],
+    extras_require={
+        "dev": [
+            "pytest",
+            "mypy==1.0.0",
+            "isort",
+            "flake8",
+            "flake8-docstrings",
+            "PyQt5-stubs",
+        ]
+    },
 )

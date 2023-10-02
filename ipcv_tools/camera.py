@@ -6,11 +6,11 @@ import os
 from abc import abstractmethod
 from glob import glob
 from pathlib import Path
-from typing import Any, Optional, Sequence, Type, Union
+from typing import Any, Optional, Sequence, Tuple, Type, Union
 
 import cv2
 import numpy as np
-from harvesters.core import Harvester
+from harvesters.core import Harvester, ImageAcquirer
 
 from ipcv_tools.processing import Worker
 
@@ -25,7 +25,7 @@ class Capture(Worker):
 
     def __init__(
         self,
-        port: Port = None,
+        port: Optional[Port] = None,
         buffer_size: int = 1,
     ) -> None:
         """Initialize.
@@ -36,7 +36,7 @@ class Capture(Worker):
         """
         super().__init__(buffer_size)
         self.port = port
-        self.handler = None
+        self.handler: Any = None
 
     @abstractmethod
     def settings(self, **kwargs: Any) -> None:
@@ -49,7 +49,7 @@ class Capture(Worker):
         pass
 
 
-def find_camera_handler(cti_file: str = None) -> Type[Capture]:
+def find_camera_handler(cti_file: Optional[str] = None) -> Type[Capture]:
     """Get appropriate camera handler.
 
     Args:
@@ -90,8 +90,8 @@ class GenICam(Capture):
 
     def __init__(
         self,
-        port: Port = None,
-        cti_file: str = None,
+        port: Optional[Port] = None,
+        cti_file: Optional[str] = None,
         buffer_size: int = 1,
     ) -> None:
         """Initialize.
@@ -112,7 +112,8 @@ class GenICam(Capture):
         assert os.path.exists(cti_file)
 
         self.cti_file = cti_file
-        self.harvester = None
+        self.harvester: Optional[Harvester] = None
+        self.handler: Optional[ImageAcquirer]
 
     def check_devices(self) -> Sequence[Any]:
         """Check if genicam devices are found.
@@ -145,9 +146,9 @@ class GenICam(Capture):
 
     def settings(
         self,
-        decimation: int = None,
-        gain: float = None,
-        exposure: float = None,
+        decimation: Optional[int] = None,
+        gain: Optional[float] = None,
+        exposure: Optional[float] = None,
         pixel_format: str = "RGB8",
         **kwargs: Any,
     ) -> None:
@@ -196,6 +197,7 @@ class GenICam(Capture):
         """Stop capturing frames from camera."""
         super().stop()
         assert self.handler is not None
+        assert self.harvester is not None
         self.handler.stop()
         self.handler.destroy()
         self.harvester.reset()
@@ -212,9 +214,15 @@ class Webcam(Capture):
     }
 
     def __enter__(self) -> Capture:
-        self.handler = cv2.VideoCapture(self.port)
+        self.handler: Optional[cv2.VideoCapture]
+        if self.port is None:
+            self.handler = cv2.VideoCapture()
+        elif type(self.port) == int:
+            self.handler = cv2.VideoCapture(index=self.port)
+        else:
+            self.handler = cv2.VideoCapture(self.port)
         assert self.handler is not None
-        self.handler.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
+        self.handler.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter.fourcc("M", "J", "P", "G"))
         return super().__enter__()
 
     def _acquire_element(self) -> Optional[np.ndarray]:
@@ -225,7 +233,7 @@ class Webcam(Capture):
         self.stop()
         return None
 
-    def get_shape(self) -> Sequence[int]:
+    def get_shape(self) -> Tuple[int, int]:
         """Get shape of frames.
 
         Returns:
@@ -233,7 +241,8 @@ class Webcam(Capture):
         """
         assert self.handler is not None
         height, width = [
-            self.handler.get(self._settings_map[k]) for k in ["height", "width"]
+            int(np.round(self.handler.get(self._settings_map[k])))
+            for k in ["height", "width"]
         ]
         return (height, width)
 

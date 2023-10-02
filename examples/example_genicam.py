@@ -52,6 +52,7 @@ with GenICam() as cam:
     node_map.Height.set_value(node_map.Height.max)
     node_map.PixelFormat.set_value("RGB8")
 
+    viewer: Union[ImageViewer, CameraUI]
     if args.viewer:
         viewer = ImageViewer(2 * width, height, _get_frame)
     else:

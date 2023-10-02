@@ -4,7 +4,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Callable, Sequence, Tuple
+from typing import Any, Callable, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -51,7 +51,7 @@ class Slider(QtWidgets.QWidget):
         min_val: float = 0,
         max_val: float = 1,
         steps: int = 100,
-        value: float = None,
+        value: Optional[float] = None,
         width: int = 300,
         height: int = 10,
     ) -> None:
@@ -291,8 +291,8 @@ class CameraUI(QtWidgets.QWidget):
         steps: int = 100,
         width: int = 300,
         height: int = 10,
-        func: Callable = None,
-        value: float = None,
+        func: Optional[Callable] = None,
+        value: Optional[float] = None,
     ) -> Slider:
         """Add a slider to the right side of the UI.
 
@@ -321,9 +321,9 @@ class CameraUI(QtWidgets.QWidget):
         name: str,
         width: int = 100,
         height: int = 10,
-        func: Callable = None,
+        func: Optional[Callable] = None,
         value: bool = False,
-    ):
+    ) -> QtWidgets.QCheckBox:
         """Add a checkbox to the right side of the UI.
 
         Args:
@@ -338,8 +338,10 @@ class CameraUI(QtWidgets.QWidget):
         checkbox.setText(name)
         checkbox.setMinimumSize(width, height)
         checkbox.setChecked(value)
-        checkbox.stateChanged.connect(func)
+        if func is not None:
+            checkbox.stateChanged.connect(func)
         self.tools_layout.addWidget(checkbox)
+        return checkbox
 
     def add_plot(
         self,
@@ -347,8 +349,8 @@ class CameraUI(QtWidgets.QWidget):
         plotter: Plotter,
         width: int = 400,
         height: int = 150,
-        signal: Any = None,
-        func: Callable = None,
+        signal: Optional[Any] = None,
+        func: Optional[Callable] = None,
     ) -> pg.PlotWidget:
         """Add plot widget to the right side ot the UI.
 

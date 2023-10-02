@@ -1,8 +1,7 @@
-default: 
-  image: python:3.8.10
-  before_script:
-    - apt update && apt install -y graphviz graphviz-dev
-    - python3 -m pip install doit pygraphviz import_deps
+image: python:3.8.10
+before_script:
+  - apt update && apt install -y graphviz graphviz-dev
+  - python3 -m pip install doit pygraphviz import_deps
 
 dependencies:
   stage: build

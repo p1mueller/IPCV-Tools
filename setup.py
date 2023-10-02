@@ -19,6 +19,7 @@ setuptools.setup(
     ],
     extras_require={
         "dev": [
+            "black",
             "pytest",
             "mypy==1.0.0",
             "isort",

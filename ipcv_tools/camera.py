@@ -214,9 +214,7 @@ class Webcam(Capture):
     def __enter__(self) -> Capture:
         self.handler = cv2.VideoCapture(self.port)
         assert self.handler is not None
-        self.handler.set(
-            cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G")
-        )
+        self.handler.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
         return super().__enter__()
 
     def _acquire_element(self) -> Optional[np.ndarray]:

@@ -316,6 +316,31 @@ class CameraUI(QtWidgets.QWidget):
             slider.value_changed.connect(func)
         return slider
 
+    def add_checkbox(
+        self,
+        name: str,
+        width: int = 100,
+        height: int = 10,
+        func: Callable = None,
+        value: bool = False,
+    ):
+        """Add a checkbox to the right side of the UI.
+
+        Args:
+            name: Name of checkbox. Also acts as label
+            width: Minimum width of the slider. Defaults to 300.
+            height: Minimal height of the slider. Defaults to 10.
+            func: Callback function when checkbox value changes.
+                Defaults to None.
+            value: Initial state of checkbox. Defaults to False.
+        """
+        checkbox = QtWidgets.QCheckBox()
+        checkbox.setText(name)
+        checkbox.setMinimumSize(width, height)
+        checkbox.setChecked(value)
+        checkbox.stateChanged.connect(func)
+        self.tools_layout.addWidget(checkbox)
+
     def add_plot(
         self,
         name: str,
@@ -381,18 +406,14 @@ if __name__ == "__main__":
         def set_std(self, value: float) -> None:
             self.std = value
 
-    viewer = CameraUI(
-        *size[::-1], ["Uniform Noise", "Gaussian Noise"], _random_noise_img
-    )
+    viewer = CameraUI(*size[::-1], ["Uniform Noise", "Gaussian Noise"], _random_noise_img)
 
     noises = []
     for c in ["R", "G", "B"]:
         noise = _Noise(
             np.random.randint(50, 205), np.random.uniform(min_sigma, max_sigma)
         )
-        viewer.add_slider(
-            f"{c} Mean", 0, 255, 256, func=noise.set_mean, value=noise.mean
-        )
+        viewer.add_slider(f"{c} Mean", 0, 255, 256, func=noise.set_mean, value=noise.mean)
         viewer.add_slider(
             f"{c} STD", min_sigma, max_sigma, 100, func=noise.set_std, value=noise.std
         )

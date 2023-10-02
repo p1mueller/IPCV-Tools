@@ -1,4 +1,4 @@
-defaults: 
+default: 
   image: python:3.8.10
   before_script:
     - apt update && apt install -y graphviz graphviz-dev

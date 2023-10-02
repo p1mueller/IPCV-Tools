@@ -24,6 +24,8 @@ setuptools.setup(
             "isort",
             "flake8",
             "flake8-docstrings",
+            "pygraphviz",
+            "import_deps",
             "PyQt5-stubs",
             "doit",
         ]

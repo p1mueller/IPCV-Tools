@@ -5,21 +5,17 @@ dependencies:
   script:
     - apt update && apt install -y graphviz graphviz-dev
     - python3 -m pip install doit pygraphviz import_deps
-    - doit
+    - doit -n 5 -P thread uml draw
   artifacts:
     paths:
       - dependencies.png
+      - classes.png
 
-pytest:
+python:
   stage: test
   before_script:
-    - python3 -m pip install -e .
+    - python3 -m pip install ".[dev]"
   script:
-    - python3 -m pip install pytest
-    - pytest tests
+    - doit codestyle
+    - doit test
 
-codestyle:
-  stage: test
-  script:
-    - python3 -m pip install flake8 flake8-docstrings mypy==0.971 isort
-    - bash codestyle.sh

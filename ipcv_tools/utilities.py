@@ -2,9 +2,36 @@
 # -*- coding: utf-8 -*-
 """General purpose utilities for the package."""
 
+import os
+import sys
 import threading
 from time import time
 from typing import Any, List, Optional
+
+
+def delete_variable(name: str) -> None:
+    """Delete environmental variable if it exists.
+
+    Args:
+        name (str): Name of environment variable
+    """
+    if os.environ.get(name) is not None:
+        os.environ.pop(name)
+
+
+def fix_cv2_issue() -> None:
+    """Fix XCB issue when opencv an Qt are used together."""
+    ci_and_not_headless = False
+    try:
+        from cv2.version import ci_build, headless
+
+        ci_and_not_headless = ci_build and not headless
+    except Exception:
+        pass
+    if sys.platform.startswith("linux") and ci_and_not_headless:
+        delete_variable("QT_QPA_PLATFORM_PLUGIN_PATH")
+    if sys.platform.startswith("linux") and ci_and_not_headless:
+        delete_variable("QT_QPA_FONTDIR")
 
 
 class FPS:

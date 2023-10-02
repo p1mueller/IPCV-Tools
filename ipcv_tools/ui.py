@@ -14,7 +14,7 @@ from PyQt5.QtCore import QObject, Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
 
 from ipcv_tools.plotting import Plotter
-from ipcv_tools.utilities import FPS
+from ipcv_tools.utilities import FPS, fix_cv2_issue
 
 
 def array_to_qimage(array: np.ndarray) -> QImage:
@@ -168,6 +168,7 @@ class CameraUI(QtWidgets.QWidget):
             source: Video source pipeline.
             title: Window title. Defaults to "IPCV Cam".
         """
+        fix_cv2_issue()
         self.app = QtWidgets.QApplication(sys.argv)
 
         super().__init__()

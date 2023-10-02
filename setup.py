@@ -25,6 +25,7 @@ setuptools.setup(
             "flake8",
             "flake8-docstrings",
             "PyQt5-stubs",
+            "doit",
         ]
     },
 )

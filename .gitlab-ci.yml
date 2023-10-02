@@ -15,7 +15,7 @@ dependencies:
 python:
   stage: test
   script:
-    - python3 -m pip install ".[dev]"
+    - python3 -m pip install -e ".[dev]"
     - doit codestyle
     - doit test
 

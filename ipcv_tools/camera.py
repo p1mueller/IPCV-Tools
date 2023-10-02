@@ -217,6 +217,12 @@ class Webcam(Capture):
     }
 
     def __init__(self, port: Port | None = None, buffer_size: int = 1) -> None:
+        """Initialize.
+
+        Args:
+            port: Camera port. Defaults to None.
+            buffer_size: Buffer size. Defaults to 1.
+        """
         if port is None:
             if sys.platform == "linux":
                 port = "/dev/video0"

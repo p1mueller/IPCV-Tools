@@ -286,7 +286,7 @@ class DataCam(Capture):
     def __init__(
         self,
         image: Union[np.ndarray, str, os.PathLike],
-        colored=False,
+        colored: bool = False,
         buffer_size: int = 1,
     ) -> None:
         """Initialize.
@@ -316,24 +316,27 @@ class DataCam(Capture):
             _img = image.copy()
         else:
             if image in names:
-                index = names.index(image)
+                index = names.index(str(image))
                 image = data_paths[index]
-            else:
-                if not os.path.exists(image):
-                    raise ValueError(f"Image path '{image}' does not exist.")
             _img = cv2.imread(str(image), cv2.IMREAD_COLOR)
+            if _img is None:
+                raise ValueError(f"Image path '{image}' does not exist.")
+
             if colored:
                 flag = cv2.COLOR_BGR2RGB
             else:
                 flag = cv2.COLOR_BGR2GRAY
-        self._image = cv2.cvtColor(_img, flag)
+        if flag is not None:
+            self._image = cv2.cvtColor(_img, flag)
+        else:
+            self._image = _img.copy()
         self._orig_image = self._image.copy()
 
     def _acquire_element(self) -> np.ndarray:
         time.sleep(5e-3)
         return self._image
 
-    def settings(self, decimation=1, **kwargs: Any) -> None:
+    def settings(self, decimation: int = 1, **kwargs: Any) -> None:
         """Set settings of camera.
 
         Args:
@@ -365,7 +368,7 @@ class NoisyDataCam(DataCam):
         super().__init__(image, colored, buffer_size)
         self._std = 0.0
 
-    def settings(self, decimation=1, rel_std=0.1, **kwargs: Any) -> None:
+    def settings(self, decimation: int = 1, rel_std: float = 0.1, **kwargs: Any) -> None:
         """Set settings of camera.
 
         Args:

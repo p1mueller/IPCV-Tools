@@ -3,10 +3,11 @@
 """Camera interfaces for easy use."""
 
 import os
+import pathlib
 import sys
+import time
 from abc import abstractmethod
 from glob import glob
-from pathlib import Path
 from typing import Any, Optional, Sequence, Tuple, Type, Union
 
 import cv2
@@ -110,7 +111,7 @@ class GenICam(Capture):
             if len(files) > 0:
                 cti_file = files[0]
             else:
-                root = Path(__file__).parent
+                root = pathlib.Path(__file__).parent
                 cti_file = str(root / "mvGenTLProducer.cti")
         assert os.path.exists(cti_file)
 
@@ -277,3 +278,69 @@ class Webcam(Capture):
         assert self.handler is not None
         super().stop()
         self.handler.release()
+
+
+class DataCam(Capture):
+    """Camera mock that displays a given static image."""
+
+    def __init__(
+        self,
+        image: Union[np.ndarray, str, os.PathLike],
+        colored=False,
+        buffer_size: int = 1,
+    ) -> None:
+        """Initialize.
+
+        Args:
+            image: Array or path of the static image
+            colored: Use color image. Defaults to False.
+            buffer_size: Buffer size. Defaults to 1.
+        """
+        super().__init__(None, buffer_size)
+
+        data_folder = pathlib.Path(__file__).parent / "data"
+        data_paths = [p for p in data_folder.glob("*")]
+        names = [p.stem for p in data_paths]
+        flag = None
+        if isinstance(image, np.ndarray):
+            ndim = image.ndim
+            if (2 > ndim) or (ndim > 3):
+                raise ValueError(
+                    "Image must have at have 2 to 3 dimensions, "
+                    f"but has dimensionality {ndim} with shape {image.shape}."
+                )
+            elif (ndim == 2) and colored:
+                flag = cv2.COLOR_GRAY2RGB
+            elif (ndim == 3) and not colored:
+                flag = cv2.COLOR_RGB2GRAY
+            _img = image.copy()
+        else:
+            if image in names:
+                index = names.index(image)
+                image = data_paths[index]
+            else:
+                if not os.path.exists(image):
+                    raise ValueError(f"Image path '{image}' does not exist.")
+            _img = cv2.imread(str(image), cv2.IMREAD_COLOR)
+            if colored:
+                flag = cv2.COLOR_BGR2RGB
+            else:
+                flag = cv2.COLOR_BGR2GRAY
+        self._image = cv2.cvtColor(_img, flag)
+        self._orig_image = self._image.copy()
+
+    def _acquire_element(self) -> np.ndarray:
+        time.sleep(5e-3)
+        return self._image
+
+    def settings(self, decimation=1, **kwargs: Any) -> None:
+        """Set settings of camera.
+
+        Args:
+            decimation: Decimation factor. Range 1 - 4. Defaults to None.
+        """
+        self._image = self._orig_image[::decimation, ::decimation]
+
+    def get_shape(self) -> Sequence[int]:
+        """Get shape of output frames."""
+        return self._image.shape[:2]

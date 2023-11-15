@@ -393,10 +393,10 @@ if __name__ == "__main__":
     max_sigma = 30
 
     def _random_noise_img() -> Tuple[np.ndarray, np.ndarray]:
-        noisy_img = np.random.randint(0, 256, size + (3,), np.uint8)
+        uniform_noise = np.random.randint(0, 256, size + (3,), np.uint8)
         imgs = [np.random.normal(noise.mean, noise.std, size) for noise in noises]
-        img = np.clip(np.stack(imgs, -1), 0, 255).astype(np.uint8)
-        return noisy_img, img
+        normal_noise = np.clip(np.stack(imgs, -1), 0, 255).astype(np.uint8)
+        return uniform_noise, normal_noise
 
     class _Noise:
         def __init__(self, mean: float, std: float) -> None:

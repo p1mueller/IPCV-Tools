@@ -344,3 +344,38 @@ class DataCam(Capture):
     def get_shape(self) -> Sequence[int]:
         """Get shape of output frames."""
         return self._image.shape[:2]
+
+
+class NoisyDataCam(DataCam):
+    """Camera mock that displays a given static image with added (dynamic) noise."""
+
+    def __init__(
+        self,
+        image: Union[np.ndarray, str, os.PathLike],
+        colored: bool = False,
+        buffer_size: int = 1,
+    ) -> None:
+        """Initialize.
+
+        Args:
+            image: Array or path of the static image
+            colored: Use color image. Defaults to False.
+            buffer_size: Buffer size. Defaults to 1.
+        """
+        super().__init__(image, colored, buffer_size)
+        self._std = 0.0
+
+    def settings(self, decimation=1, rel_std=0.1, **kwargs: Any) -> None:
+        """Set settings of camera.
+
+        Args:
+            decimation: Decimation factor. Range 1 - 4. Defaults to None.
+            rel_std: Relative standard deviation of noise compared to image STD.
+                Defaults to 0.1.
+        """
+        super().settings(decimation, **kwargs)
+        self._std = np.abs(rel_std) * self._image.std()
+
+    def _acquire_element(self) -> np.ndarray:
+        noise = np.random.normal(scale=self._std, size=self._image.shape)
+        return np.clip(np.round(self._image + noise), 0, 255).astype(np.uint8)

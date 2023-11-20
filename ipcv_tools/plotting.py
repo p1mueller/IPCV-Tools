@@ -50,10 +50,10 @@ class Plotter(ABC):
             example: Example image to initialize graph.
         """
         self.graph = graph
-        self.init_graph(example)
+        self._init_graph(example)
 
     @abstractmethod
-    def init_graph(self, example: np.ndarray) -> None:
+    def _init_graph(self, example: np.ndarray) -> None:
         """Initialize graph with line dummies.
 
         Args:
@@ -82,7 +82,7 @@ class HistogramPlotter(Plotter):
         self.frame_index = frame_index
         self.grayscale = grayscale
 
-    def init_graph(self, example: np.ndarray) -> None:
+    def _init_graph(self, example: np.ndarray) -> None:
         """Initialize graph with line dummies.
 
         Args:

@@ -4,7 +4,7 @@
 
 from typing import Any, Callable, Dict, Optional, Sequence, Union
 
-from ipcv_tools.camera import Port, find_camera_handler
+from ipcv_tools.camera import Capture, Port, find_camera_handler
 from ipcv_tools.processing import Processor
 from ipcv_tools.ui import CameraUI
 from ipcv_tools.viewer import ImageViewer
@@ -22,6 +22,7 @@ class Pipeline:
         height: Optional[int] = None,
         use_ui: Optional[bool] = True,
         img_names: Optional[Sequence[str]] = None,
+        camera: Optional[Capture] = None,
         processor_buf_size: int = 1,
         camera_buf_size: int = 1,
         title: str = "IPCV Viewer",
@@ -34,6 +35,7 @@ class Pipeline:
             port: Camera port. Defaults to None.
             width: Width of the received frame. Defaults to None.
             height: Height of the received frame. Defaults to None.
+            camera: Camera object. Defaults to None.
             use_ui: Use UI or if false the image viewer. Defaults to True.
             img_names: Names of received images.
                 Only needed when use_ui=True. Defaults to None.
@@ -45,8 +47,11 @@ class Pipeline:
         self.width = width
         self.height = height
 
-        cam_handler = find_camera_handler(port, cti_file)
-        self.camera = cam_handler(port, buffer_size=camera_buf_size)
+        if camera is None:
+            cam_handler = find_camera_handler(port, cti_file)
+            self.camera = cam_handler(port, buffer_size=camera_buf_size)
+        else:
+            self.camera = camera
         self.processor = Processor(self.camera.get_next_element, func, processor_buf_size)
 
         if (width is None) or (height is None):

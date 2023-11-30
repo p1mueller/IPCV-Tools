@@ -4,7 +4,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Callable, Optional, Sequence, Tuple
+from typing import Any, Callable, List, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -109,7 +109,7 @@ class CameraUI(QtWidgets.QWidget):
             self.img_widgets.append(img_widget)
         tab.setCurrentIndex(len(img_names) - 1)
 
-        self.plotters = []
+        self.plotters: List[Plotter] = []
 
         # Label to display image shape and FPS
         self.info_label = QtWidgets.QLabel()

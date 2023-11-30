@@ -8,7 +8,6 @@ from argparse import ArgumentParser
 import utilities
 
 from ipcv_tools.pipeline import Pipeline
-from ipcv_tools.plotting import HistogramPlotter
 from ipcv_tools.ui import CameraUI
 
 parser = ArgumentParser()
@@ -34,8 +33,7 @@ pipeline = Pipeline(
 
 if isinstance(pipeline.viewer, CameraUI):
     utilities.initialize_controls(pipeline.viewer, contour_resampler)
-    hist_plotter = HistogramPlotter(0, args.monochrome)
-    pipeline.viewer.add_plot("Histogram", hist_plotter)
+    utilities.initialize_plots(pipeline.viewer, 0, args.monochrome)
 
 ret = pipeline.run(
     {

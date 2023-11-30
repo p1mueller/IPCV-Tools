@@ -7,6 +7,7 @@ from typing import Sequence
 import cv2
 import numpy as np
 
+from ipcv_tools.plotting import HistogramPlotter
 from ipcv_tools.ui import CameraUI
 
 
@@ -61,6 +62,20 @@ def initialize_controls(viewer: CameraUI, contour_resampler: "ContourResampler")
         contour_resampler.set_rel_coeffs,
         value=contour_resampler.rel_coeffs,
     )
+
+
+def initialize_plots(
+    viewer: CameraUI, frame_index: int = 0, monochrome: bool = False
+) -> None:
+    """Initialize UI plots.
+
+    Args:
+        viewer: UI
+        frame_index: Index of frame of which the histogram is calculated. Defaults to 0.
+        monochrome: Flag if histogram is calculated monochrome. Defaults to False.
+    """
+    hist_plotter = HistogramPlotter(frame_index, monochrome)
+    viewer.add_plot("Histogram", hist_plotter)
 
 
 def create_contour_resampler() -> "ContourResampler":

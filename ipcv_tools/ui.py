@@ -109,6 +109,8 @@ class CameraUI(QtWidgets.QWidget):
             self.img_widgets.append(img_widget)
         tab.setCurrentIndex(len(img_names) - 1)
 
+        self.plotters = []
+
         # Label to display image shape and FPS
         self.info_label = QtWidgets.QLabel()
 
@@ -300,6 +302,7 @@ class CameraUI(QtWidgets.QWidget):
         self.video_thread.changed_image.connect(plotter.update)
         if (signal is not None) and (func is not None):
             signal.connect(func)
+        self.plotters.append(plotter)
         return graph
 
 

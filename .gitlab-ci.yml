@@ -11,6 +11,7 @@ codestyle:
 pytest:
   stage: test
   script:
+    - uv pip install -e .
     - uv run pytest -v --junitxml=report.xml tests
   artifacts:
     when: always

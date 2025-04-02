@@ -14,8 +14,8 @@ install:
     - uv cache prune --ci
   cache:
     - key:
-      files:
-        - uv.lock
+        files:
+          - uv.lock
       paths:
         - $UV_CACHE_DIR
 

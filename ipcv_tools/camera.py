@@ -312,6 +312,7 @@ class DataCam(Capture):
         self,
         image: Union[np.ndarray, str, os.PathLike],
         colored: bool = False,
+        cti_file: Optional[str] = None,
         buffer_size: int = 1,
     ) -> None:
         """Initialize.
@@ -319,9 +320,10 @@ class DataCam(Capture):
         Args:
             image: Array or path of the static image
             colored: Use color image. Defaults to False.
+            cti_file: Path to CTI file. Defaults to None.
             buffer_size: Buffer size. Defaults to 1.
         """
-        super().__init__(None, buffer_size)
+        super().__init__(None, cti_file, buffer_size)
 
         data_folder = pathlib.Path(__file__).parent / "data"
         data_paths = list(data_folder.glob("*"))
@@ -381,6 +383,7 @@ class NoisyDataCam(DataCam):
         self,
         image: Union[np.ndarray, str, os.PathLike],
         colored: bool = False,
+        cti_file: Optional[str] = None,
         buffer_size: int = 1,
     ) -> None:
         """Initialize.
@@ -388,9 +391,10 @@ class NoisyDataCam(DataCam):
         Args:
             image: Array or path of the static image
             colored: Use color image. Defaults to False.
+            cti_file: Path to CTI file. Defaults to None.
             buffer_size: Buffer size. Defaults to 1.
         """
-        super().__init__(image, colored, buffer_size)
+        super().__init__(image, colored, cti_file, buffer_size)
         self._std = 0.0
 
     def settings(self, decimation: int = 1, rel_std: float = 0.1, **kwargs: Any) -> None:

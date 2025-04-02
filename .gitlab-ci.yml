@@ -1,12 +1,16 @@
 image: ghcr.io/astral-sh/uv:debian-slim
 
+before_script:
+  - uv sync
+
 install:
   stage: .pre
+  before_script: []
   script:
     - uv sync
   artifacts:
     paths:
-      - .venv/
+      - uv.lock
 
 codestyle:
   stage: test

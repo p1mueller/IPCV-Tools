@@ -4,7 +4,7 @@ version = "0.0.1"
 authors = [
   { name = "Patrik Mueller", email = "patrik.mueller@ost.ch" }
 ]
-requires-python = ">=3.9,<=3.11"
+requires-python = ">=3.9,<3.12"
 dependencies = [
     "harvesters>=1.4.3",
     "matplotlib>=3.7.5",

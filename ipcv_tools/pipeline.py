@@ -49,7 +49,7 @@ class Pipeline:
 
         if camera is None:
             cam_handler = find_camera_handler(port, cti_file)
-            self.camera = cam_handler(port, buffer_size=camera_buf_size)
+            self.camera = cam_handler(port, cti_file, buffer_size=camera_buf_size)
         else:
             self.camera = camera
         self.processor = Processor(self.camera.get_next_element, func, processor_buf_size)

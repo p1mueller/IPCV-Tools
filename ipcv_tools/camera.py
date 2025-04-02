@@ -28,16 +28,19 @@ class Capture(Worker):
     def __init__(
         self,
         port: Optional[Port] = None,
+        cti_file: Optional[str] = None,
         buffer_size: int = 1,
     ) -> None:
         """Initialize.
 
         Args:
             port: Camera port. Defaults to None.
+            cti_file: Path to CTI file. Defaults to None.
             buffer_size: Buffer size. Defaults to 1.
         """
         super().__init__(buffer_size)
         self.port = port
+        self.cti_file = cti_file
         self.handler: Any = None
 
     @abstractmethod
@@ -104,7 +107,6 @@ class GenICam(Capture):
             cti_file: Path to CTI file. Defaults to None.
             buffer_size: Buffer size. Defaults to 1.
         """
-        super().__init__(port, buffer_size)
         if cti_file is None:
             files = find_cti_files()
             if len(files) > 0:
@@ -114,7 +116,9 @@ class GenICam(Capture):
                 cti_file = str(root / "mvGenTLProducer.cti")
         assert os.path.exists(cti_file)
 
-        self.cti_file = cti_file
+        super().__init__(port, cti_file, buffer_size)
+
+        self.soft_trigger = True
         self.harvester: Optional[Harvester] = None
         self.handler: Optional[ImageAcquirer]
 
@@ -142,8 +146,9 @@ class GenICam(Capture):
 
     def _acquire_element(self) -> np.ndarray:
         assert self.handler is not None
-        self.handler.remote_device.node_map.TriggerSoftware.execute()
-        with self.handler.fetch(timeout=5.0) as buffer:
+        if self.soft_trigger:
+            self.handler.remote_device.node_map.TriggerSoftware.execute()
+        with self.handler.fetch(timeout=0.2) as buffer:
             component = buffer.payload.components[0]
             img = component.data.reshape(component.height, component.width).copy()
         return img
@@ -154,6 +159,7 @@ class GenICam(Capture):
         gain: Optional[float] = None,
         exposure: Optional[float] = None,
         pixel_format: str = "RGB8",
+        soft_trigger: bool = True,
         **_: Any,
     ) -> None:
         """Set settings of camera.
@@ -163,6 +169,7 @@ class GenICam(Capture):
             gain: Gain in dB. Range 0.0 - 28.0. Defaults to None.
             exposure: Exposure time in us. Range 30.0 - 1000000.0. Defaults to None.
             pixel_format: Format of pixels. "RGB8" recommended. Defaults to None.
+            soft_trigger: Use software trigger. Defaults to True.
         """
         assert self.handler is not None
         node_map = self.handler.remote_device.node_map
@@ -171,12 +178,24 @@ class GenICam(Capture):
         if decimation is not None:
             node_map.DecimationHorizontal.set_value(decimation)
             node_map.DecimationVertical.set_value(decimation)
-            node_map.Width.set_value(node_map.Width.max)
-            node_map.Height.set_value(node_map.Height.max)
+            try:  # For some cameras width and height are read-only
+                node_map.Width.set_value(node_map.Width.max)
+                node_map.Height.set_value(node_map.Height.max)
+            except Exception:
+                pass
+        node_map.AcquisitionMode.set_value("Continuous")
+        if soft_trigger:
+            node_map.TriggerMode.set_value("On")
+            node_map.TriggerSource.set_value("Software")
+            node_map.AcquisitionFrameRateMode.set_value("Off")
+        else:
+            node_map.TriggerMode.set_value("Off")
+            node_map.AcquisitionFrameRateMode.set_value("On")
         if gain is not None:
             node_map.Gain.set_value(float(gain))
         if exposure is not None:
             node_map.ExposureTime.set_value(float(exposure))
+        self.soft_trigger = soft_trigger
 
     def get_shape(self) -> Sequence[int]:
         """Get shape of frames.
@@ -217,11 +236,17 @@ class Webcam(Capture):
         "exposure": cv2.CAP_PROP_EXPOSURE,
     }
 
-    def __init__(self, port: Optional[Port] = None, buffer_size: int = 1) -> None:
+    def __init__(
+        self,
+        port: Optional[Port] = None,
+        cti_file: Optional[str] = None,
+        buffer_size: int = 1,
+    ) -> None:
         """Initialize.
 
         Args:
             port: Camera port. Defaults to None.
+            cti_file: Path to CTI file. Defaults to None.
             buffer_size: Buffer size. Defaults to 1.
         """
         if port is None:
@@ -229,7 +254,7 @@ class Webcam(Capture):
                 port = "/dev/video0"
             else:
                 port = 0
-        super().__init__(port, buffer_size)
+        super().__init__(port, cti_file, buffer_size)
 
     def __enter__(self) -> Capture:
         self.handler: Optional[cv2.VideoCapture]

@@ -42,6 +42,7 @@ ret = pipeline.run(
         "height": height,
         "exposure": args.exposure,
         "gain": args.gain,
+        "pixel_format": "Mono8" if args.monochrome else "RGB8",
     }
 )
 sys.exit(ret)

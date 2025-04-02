@@ -1,5 +1,5 @@
 # Image Processing and Computer Vision Tools
-Contains useful utilities for generating computer vision pipelines 
+Contains useful utilities for generating computer vision pipelines
 and visualizing the results.
 
 ## Installation
@@ -8,7 +8,7 @@ python3 -m pip install -e .
 ```
 
 ## Project Structure
-![Dependencies](https://gitlab.ost.ch/patrik.mueller/ipcv-tools/-/jobs/artifacts/master/raw/dependencies.png?job=dependencies)
+![Dependencies](https://gitlab.ost.ch/patrik.mueller/ipcv-tools/-/jobs/artifacts/master/raw/packages.png?job=dependencies)
 
 
 ![Classes](https://gitlab.ost.ch/patrik.mueller/ipcv-tools/-/jobs/artifacts/master/raw/classes.png?job=dependencies)

@@ -11,6 +11,7 @@ size = 20
 
 
 def fill_buffer(buffer):
+    """Fill buffer with data."""
     data = np.arange(size, dtype=int)
     for i in data:
         buffer.add(i)
@@ -20,6 +21,7 @@ def fill_buffer(buffer):
 
 
 def test_add():
+    """Test adding elements to the buffer."""
     buffer = Buffer(size)
     assert len(buffer) == 0
     data = fill_buffer(buffer)
@@ -29,6 +31,7 @@ def test_add():
 
 
 def test_pop():
+    """Test popping elements from the buffer."""
     buffer = Buffer(size)
     assert len(buffer) == 0
     data = fill_buffer(buffer)
@@ -61,23 +64,28 @@ def _random_sleep():
 
 
 class TestAsync:
+    """Test asynchronous read and write operations on the buffer."""
+
     data = list(range(size))[::-1]
     consumed_data = []
     finished_producing = False
     buffer = Buffer(size)
 
     def producing(self):
+        """Produce data and add it to the buffer."""
         for d in self.data:
             _random_sleep()
             self.buffer.add(d)
         self.finished_producing = True
 
     def consuming(self):
+        """Consume data from the buffer."""
         while (not self.finished_producing) or (self.buffer.not_empty_event.is_set()):
             _random_sleep()
             self.consumed_data.append(self.buffer.pop())
 
     def test_async_read_write(self):
+        """Test asynchronous read and write operations on the buffer."""
         threads = [threading.Thread(target=f) for f in (self.producing, self.consuming)]
         for thread in threads:
             thread.start()

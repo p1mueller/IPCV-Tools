@@ -43,12 +43,10 @@ class Capture(Worker):
     @abstractmethod
     def settings(self, **kwargs: Any) -> None:
         """Set settings of camera."""
-        pass
 
     @abstractmethod
     def get_shape(self) -> Sequence[int]:
         """Get shape of output frames."""
-        pass
 
 
 def find_camera_handler(
@@ -57,6 +55,7 @@ def find_camera_handler(
     """Get appropriate camera handler.
 
     Args:
+        port: Camera port. If None will search for the first best camera. Defaults to None.
         cti_file: CTI file to use (only when GenICam). Defaults to None.
 
     Returns:
@@ -143,9 +142,10 @@ class GenICam(Capture):
 
     def _acquire_element(self) -> np.ndarray:
         assert self.handler is not None
+        self.handler.remote_device.node_map.TriggerSoftware.execute()
         with self.handler.fetch(timeout=5.0) as buffer:
             component = buffer.payload.components[0]
-            img = component.data.reshape(component.height, component.width, 3).copy()
+            img = component.data.reshape(component.height, component.width).copy()
         return img
 
     def settings(
@@ -154,7 +154,7 @@ class GenICam(Capture):
         gain: Optional[float] = None,
         exposure: Optional[float] = None,
         pixel_format: str = "RGB8",
-        **kwargs: Any,
+        **_: Any,
     ) -> None:
         """Set settings of camera.
 
@@ -299,7 +299,7 @@ class DataCam(Capture):
         super().__init__(None, buffer_size)
 
         data_folder = pathlib.Path(__file__).parent / "data"
-        data_paths = [p for p in data_folder.glob("*")]
+        data_paths = list(data_folder.glob("*"))
         names = [p.stem for p in data_paths]
         flag = None
         if isinstance(image, np.ndarray):
@@ -309,7 +309,7 @@ class DataCam(Capture):
                     "Image must have at have 2 to 3 dimensions, "
                     f"but has dimensionality {ndim} with shape {image.shape}."
                 )
-            elif (ndim == 2) and colored:
+            if (ndim == 2) and colored:
                 flag = cv2.COLOR_GRAY2RGB
             elif (ndim == 3) and not colored:
                 flag = cv2.COLOR_RGB2GRAY
@@ -336,7 +336,7 @@ class DataCam(Capture):
         time.sleep(5e-3)
         return self._image
 
-    def settings(self, decimation: int = 1, **kwargs: Any) -> None:
+    def settings(self, decimation: int = 1, **_: Any) -> None:
         """Set settings of camera.
 
         Args:
@@ -375,6 +375,7 @@ class NoisyDataCam(DataCam):
             decimation: Decimation factor. Range 1 - 4. Defaults to None.
             rel_std: Relative standard deviation of noise compared to image STD.
                 Defaults to 0.1.
+            kwargs: Additional arguments for DataCam.
         """
         super().settings(decimation, **kwargs)
         self._std = np.abs(rel_std) * self._image.std()

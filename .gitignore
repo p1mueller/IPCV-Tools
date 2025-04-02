@@ -5,5 +5,7 @@ __pycache__
 .vscode
 .eggs
 .pytest_cache
+.ruff_cache
 ipcv_tools.egg-info
 .doit.db
+uv.lock

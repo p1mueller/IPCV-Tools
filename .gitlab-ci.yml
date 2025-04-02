@@ -3,21 +3,15 @@ image: ghcr.io/astral-sh/uv:debian-slim
 before_script:
   - uv sync
 
-variables:
-  UV_CACHE_DIR: .uv-cache
-
 install:
   stage: .pre
   before_script: []
   script:
     - uv sync
-    - uv cache prune --ci
-  cache:
-    - key:
-        files:
-          - uv.lock
-      paths:
-        - $UV_CACHE_DIR
+  artifacts:
+    paths:
+      - uv.lock
+    expire_in: 1h
 
 codestyle:
   stage: test

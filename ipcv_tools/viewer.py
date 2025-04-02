@@ -23,6 +23,7 @@ class _Font:
         self.params = params
 
     def as_dict(self) -> Dict[str, Any]:
+        """Get font parameters as dictionary."""
         return self.params
 
 
@@ -96,7 +97,7 @@ class ImageViewer:
         self.display.blits([(surf, (0, 0)), (text, self.txt_coord)])
 
         events = pygame.event.get()
-        if any([e.type == pygame.QUIT for e in events]):
+        if any(e.type == pygame.QUIT for e in events):
             self.quit.set()
 
         pygame.display.update()

@@ -7,6 +7,7 @@ from typing import Sequence
 import cv2
 import numpy as np
 
+from ipcv_tools.plotting import HistogramPlotter
 from ipcv_tools.ui import CameraUI
 
 
@@ -54,13 +55,27 @@ def initialize_controls(viewer: CameraUI, contour_resampler: "ContourResampler")
     viewer.add_slider(
         "Coeffs %",
         0.0,
-        1.0,
+        100.0,
         501,
         300,
         10,
         contour_resampler.set_rel_coeffs,
-        value=contour_resampler.rel_coeffs,
+        value=100.0 * contour_resampler.rel_coeffs,
     )
+
+
+def initialize_plots(
+    viewer: CameraUI, frame_index: int = 0, monochrome: bool = False
+) -> None:
+    """Initialize UI plots.
+
+    Args:
+        viewer: UI
+        frame_index: Index of frame of which the histogram is calculated. Defaults to 0.
+        monochrome: Flag if histogram is calculated monochrome. Defaults to False.
+    """
+    hist_plotter = HistogramPlotter(frame_index, monochrome)
+    viewer.add_plot("Histogram", hist_plotter)
 
 
 def create_contour_resampler() -> "ContourResampler":
@@ -139,7 +154,7 @@ class ContourResampler:
         Args:
             value: New value
         """
-        self.rel_coeffs = value
+        self.rel_coeffs = value / 100.0
 
     def set_abs_coeffs(self, value: float) -> None:
         """Set the absolute number of Fourier coefficients kept.
@@ -158,7 +173,7 @@ class ContourResampler:
         self.sigma = value
 
     def __call__(self, frame: np.ndarray) -> Sequence[np.ndarray]:
-        """Processing function.
+        """Process frame.
 
         1. Blur image (Gaussian blur)
         2. Threshold image (Otsu)

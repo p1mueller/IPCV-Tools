@@ -64,9 +64,12 @@ def find_camera_handler(
     Returns:
         Appropriate capture class
     """
-    geni = GenICam(port=port, cti_file=cti_file)
-    if len(geni.check_devices()) > 0:
-        return GenICam
+    try:
+        geni = GenICam(port=port, cti_file=cti_file)
+        if len(geni.check_devices()) > 0:
+            return GenICam
+    except Exception:
+        pass
     return Webcam
 
 
@@ -159,6 +162,7 @@ class GenICam(Capture):
         gain: Optional[float] = None,
         exposure: Optional[float] = None,
         pixel_format: str = "RGB8",
+        frame_rate: float = 30.0,
         soft_trigger: bool = True,
         **_: Any,
     ) -> None:
@@ -169,6 +173,7 @@ class GenICam(Capture):
             gain: Gain in dB. Range 0.0 - 28.0. Defaults to None.
             exposure: Exposure time in us. Range 30.0 - 1000000.0. Defaults to None.
             pixel_format: Format of pixels. "RGB8" recommended. Defaults to None.
+            frame_rate: Frame rate in Hz. Defaults to 30.0.
             soft_trigger: Use software trigger. Defaults to True.
         """
         assert self.handler is not None
@@ -191,6 +196,7 @@ class GenICam(Capture):
         else:
             node_map.TriggerMode.set_value("Off")
             node_map.AcquisitionFrameRateMode.set_value("On")
+        node_map.AcquisitionFrameRate.set_value(frame_rate)
         if gain is not None:
             node_map.Gain.set_value(float(gain))
         if exposure is not None:

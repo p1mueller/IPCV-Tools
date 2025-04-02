@@ -11,6 +11,7 @@ sleep_time = 1 / target_fps
 
 
 def test_update():
+    """Test FPS update method."""
     fps = FPS()
     fps.update()
     for _ in range(20):

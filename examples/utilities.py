@@ -55,12 +55,12 @@ def initialize_controls(viewer: CameraUI, contour_resampler: "ContourResampler")
     viewer.add_slider(
         "Coeffs %",
         0.0,
-        1.0,
+        100.0,
         501,
         300,
         10,
         contour_resampler.set_rel_coeffs,
-        value=contour_resampler.rel_coeffs,
+        value=100.0 * contour_resampler.rel_coeffs,
     )
 
 
@@ -154,7 +154,7 @@ class ContourResampler:
         Args:
             value: New value
         """
-        self.rel_coeffs = value
+        self.rel_coeffs = value / 100.0
 
     def set_abs_coeffs(self, value: float) -> None:
         """Set the absolute number of Fourier coefficients kept.

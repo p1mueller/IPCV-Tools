@@ -18,6 +18,7 @@ def compute_histogram(
 
     Args:
         img: RGB image
+        grayscale: Image is grayscale. Defaults to False.
 
     Returns:
         Center points of bins
@@ -60,12 +61,10 @@ class Plotter(ABC):
             graph: Graph
             example: Example image to initialize graph.
         """
-        pass
 
     @abstractmethod
     def update(self, frames: Sequence[np.ndarray]) -> None:
         """Update plot."""
-        pass
 
 
 class HistogramPlotter(Plotter):
@@ -81,6 +80,7 @@ class HistogramPlotter(Plotter):
         super().__init__()
         self.frame_index = frame_index
         self.grayscale = grayscale
+        self.lines: List[pg.PlotCurveItem] = []
 
     def _init_graph(self, example: np.ndarray) -> None:
         """Initialize graph with line dummies.
@@ -90,7 +90,7 @@ class HistogramPlotter(Plotter):
             example: Example image to initialize graph.
         """
         assert self.graph is not None
-        self.lines: List[pg.PlotCurveItem] = []
+        self.lines.clear()
         self.graph.addLegend()
 
         x, hists = compute_histogram(example, self.grayscale)
@@ -106,7 +106,7 @@ class HistogramPlotter(Plotter):
     def _ensure_dim(self, img: np.ndarray) -> np.ndarray:
         if self.grayscale and (img.ndim > 2):
             return np.round(img.mean(-1)).astype(np.uint8)
-        elif not self.grayscale and (img.ndim < 3):
+        if not self.grayscale and (img.ndim < 3):
             return img[..., None].repeat(3, -1)
         return img
 

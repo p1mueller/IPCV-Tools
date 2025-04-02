@@ -173,7 +173,7 @@ class ContourResampler:
         self.sigma = value
 
     def __call__(self, frame: np.ndarray) -> Sequence[np.ndarray]:
-        """Processing function.
+        """Process frame.
 
         1. Blur image (Gaussian blur)
         2. Threshold image (Otsu)

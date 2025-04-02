@@ -199,7 +199,7 @@ class CameraUI(QtWidgets.QWidget):
 
     def run(self) -> int:
         """Start the UI."""
-        null_img = np.zeros((self._height, self._width, 3), np.uint8)
+        null_img: np.ndarray = np.zeros((self._height, self._width, 3), np.uint8)
         self.update_images(len(self.img_widgets) * [null_img])
         self.video_thread.start()
         self.show()
@@ -297,7 +297,7 @@ class CameraUI(QtWidgets.QWidget):
 
         self.tools_layout.addWidget(graph)
 
-        null_img = np.ones((self._height, self._width, 3), np.uint8)
+        null_img: np.ndarray = np.ones((self._height, self._width, 3), np.uint8)
         plotter.set_graph(graph, null_img)
         self.video_thread.changed_image.connect(plotter.update)
         if (signal is not None) and (func is not None):

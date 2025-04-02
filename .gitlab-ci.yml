@@ -1,15 +1,17 @@
-image: python:3.11.11
+image: ghcr.io/astral-sh/uv:latest
 
 codestyle:
   stage: test
   script:
-    - python3 -m pip install -e ".[dev]"
+    - uv sync
+    - source .venv/bin/activate
     - python3 -m mypy ipcv_tools examples --ignore-missing-imports --disallow-untyped-defs --follow-imports skip
 
 pytest:
   stage: test
   script:
-    - python3 -m pip install -e ".[dev]"
+    - uv sync
+    - source .venv/bin/activate
     - python3 -m pytest -v --junitxml=report.xml tests
   artifacts:
     when: always
@@ -18,6 +20,7 @@ pytest:
 
 dependencies:
   stage: deploy
+  image: python:3.11
   before_script:
     - apt update && apt install -y graphviz graphviz-dev
     - python3 -m pip install pygraphviz pylint

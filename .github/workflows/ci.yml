@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+
+jobs:
+  lint:
+    name: Lint / type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.10"
+          enable-cache: true
+      - name: Sync dependencies
+        run: uv sync --group dev
+      - name: Ruff format check
+        run: uv run ruff format --check ipcv_tools tests examples
+      - name: Ruff lint
+        run: uv run ruff check ipcv_tools tests
+      - name: Mypy
+        run: uv run mypy ipcv_tools examples --ignore-missing-imports --disallow-untyped-defs --follow-imports skip
+
+  test:
+    name: Tests + coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.10"
+          enable-cache: true
+      - name: Install native dependencies for headless opencv / Qt
+        run: |
+          sudo apt update
+          sudo apt install -y ffmpeg libsm6 libxext6
+      - name: Sync dependencies
+        run: uv sync --group dev
+      - name: Install package (editable)
+        run: uv pip install -e .
+      - name: Run tests with coverage
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          uv run pytest -v \
+            --junitxml=report.xml \
+            tests \
+            --cov=ipcv_tools \
+            --cov-report=xml \
+            --cov-report=html
+      - name: Publish JUnit and coverage reports
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test and coverage reports
+          path: report.xml, coverage.xml
+          reporter: github-checks
+          fail-on-error: false
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.xml
+          retention-days: 7
+      - name: Upload HTML coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov/
+          retention-days: 7
+
+  diagram:
+    name: Package / class diagram
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.10"
+          enable-cache: true
+      - name: Install graphviz
+        run: sudo apt update && sudo apt install -y graphviz graphviz-dev
+      - name: Sync dependencies
+        run: uv sync --group dev
+      - name: Generate diagram
+        run: uv run pyreverse -k -my -o png ipcv_tools/*.py
+      - name: Upload diagram
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagram
+          path: |
+            packages.png
+            classes.png
+          retention-days: 7

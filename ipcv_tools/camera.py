@@ -351,9 +351,10 @@ class DataCam(Capture):
             if image in names:
                 index = names.index(str(image))
                 image = data_paths[index]
-            _img = cv2.imread(str(image), cv2.IMREAD_COLOR)
-            if _img is None:
+            res = cv2.imread(str(image), cv2.IMREAD_COLOR)
+            if res is None:
                 raise ValueError(f"Image path '{image}' does not exist.")
+            _img = np.asarray(res)
 
             if colored:
                 flag = cv2.COLOR_BGR2RGB

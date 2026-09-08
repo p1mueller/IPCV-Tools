@@ -155,3 +155,49 @@ def test_webcam_settings_passes_known_and_ignores_unknown_keys(monkeypatch):
     assert cv2.CAP_PROP_FRAME_WIDTH in keys
     # "unknown" must not be forwarded to cv2.
     assert cv2.CAP_PROP_GAIN not in keys
+
+
+def test_webcam_default_port_on_linux():
+    """On linux a None port should default to /dev/video0."""
+    cam = Webcam(port=None, buffer_size=2)
+    assert cam.port == "/dev/video0"
+
+
+def test_webcam_string_port_open(monkeypatch):
+    """A string port should open cv2.VideoCapture by passing the device path."""
+    opened = {}
+
+    class _Dev(_FakeCaptureDevice):
+        def read(self):
+            return True, np.zeros((4, 4, 3), np.uint8)
+
+    def _capt(*a, **k):
+        opened.update(a=a, k=k)
+        return _Dev()
+
+    monkeypatch.setattr(cv2, "VideoCapture", _capt)
+    cam = _enter_cam(Webcam(port="/dev/video0"))
+    try:
+        cam._acquire_element()
+    finally:
+        cam.handler.release()
+    assert opened["a"] == ("/dev/video0",)
+
+
+def test_webcam_read_failure_requests_stop(monkeypatch):
+    """On read() failure _acquire_element should return None and stop the camera."""
+
+    class _Dev(_FakeCaptureDevice):
+        def read(self):
+            return False, None
+
+    monkeypatch.setattr(cv2, "VideoCapture", lambda *a, **k: _Dev())
+    cam = _enter_cam(Webcam(port=0))
+    try:
+        stopped = {"n": 0}
+        cam.stop = lambda: stopped.update(n=stopped["n"] + 1)
+        got = cam._acquire_element()
+        assert got is None
+        assert stopped["n"] == 1
+    finally:
+        cam.handler.release()

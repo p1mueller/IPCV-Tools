@@ -44,6 +44,30 @@ def test_fix_cv2_issue_keeps_vars_when_headless(monkeypatch):
     assert os.environ.get("QT_QPA_FONTDIR") == "/y"
 
 
+def test_fix_cv2_issue_import_error_is_swallowed(monkeypatch):
+    """If cv2.version import fails the function must swallow the error.
+
+    On a linux + CI + non-headless build this still clears the QT vars.
+    """
+    import os
+    import sys
+
+    import cv2
+
+    # Make the `from cv2.version import ...` inside the function fail.
+    monkeypatch.delitem(sys.modules, "cv2.version", raising=False)
+    monkeypatch.delattr(cv2, "version", raising=False)
+
+    os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = "/x"
+    os.environ["QT_QPA_FONTDIR"] = "/y"
+
+    fix_cv2_issue()
+
+    # The error path leaves ci_and_not_headless False, so nothing is cleared.
+    assert os.environ.get("QT_QPA_PLATFORM_PLUGIN_PATH") is None
+    assert os.environ.get("QT_QPA_FONTDIR") is None
+
+
 def test_delete_variable(monkeypatch):
     """delete_variable should remove existing vars and ignore unknown ones."""
     monkeypatch.setenv("TEST_IPCV_VAR", "1")

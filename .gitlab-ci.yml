@@ -23,6 +23,7 @@ codestyle:
 pytest:
   stage: test
   script:
+    - apt update && apt install -y ffmpeg libsm6 libxext6
     - uv pip install -e .
     - uv run pytest -v --junitxml=report.xml tests
   dependencies:

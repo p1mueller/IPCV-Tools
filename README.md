@@ -176,3 +176,7 @@ uv run pytest tests --cov=ipcv_tools --cov-report=term-missing
 The CI pipeline (`.github/workflows/ci.yml`, `.gitlab-ci.yml`) runs lint
 (`ruff`), type checking (`mypy`), the test suite with coverage, and publishes
 artifacts.
+
+## License
+
+Licensed under the MIT License — see [`LICENSE`](LICENSE).

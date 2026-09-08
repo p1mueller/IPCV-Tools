@@ -61,12 +61,6 @@ ipcv_tools/
 └── tests/           # pytest suite (~90 tests, 92 % coverage)
 ```
 
-### Dependency graph & class diagram
-
-![packages](https://gitlab.ost.ch/patrik.mueller/ipcv-tools/-/jobs/artifacts/master/raw/packages.png?job=dependencies)
-
-![classes](https://gitlab.ost.ch/patrik.mueller/ipcv-tools/-/jobs/artifacts/master/raw/classes.png?job=dependencies)
-
 ## Quick start
 
 The simplest way to run a pipeline on a **GenICam** camera with the PyQt5 UI:

@@ -42,3 +42,15 @@ ignore = ["E203", "E501", "D105", "D202", "D203", "D213", "D413"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.coverage.run]
+source = ["ipcv_tools"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "raise NotImplementedError(.*)",
+]
+show_missing = true

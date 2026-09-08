@@ -25,13 +25,21 @@ pytest:
   script:
     - apt update && apt install -y ffmpeg libsm6 libxext6
     - uv pip install -e .
-    - uv run pytest -v --junitxml=report.xml tests
+    - uv run pytest -v --junitxml=report.xml tests --cov=ipcv_tools --cov-report=xml --cov-report=html
+  coverage: /^\s*TOTAL\s+\d+\s+\d+\s+\d+\s+\d+\s+(\d+(?:\.\d+)?)%\s*$/
   dependencies:
     - install
   artifacts:
     when: always
+    paths:
+      - coverage.xml
+      - htmlcov/
+    expire_in: 7 days
     reports:
       junit: report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
 
 dependencies:
   stage: deploy

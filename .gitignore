@@ -9,3 +9,5 @@ __pycache__
 ipcv_tools.egg-info
 .doit.db
 uv.lock
+.coverage
+coverage.xml

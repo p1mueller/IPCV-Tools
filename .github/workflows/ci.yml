@@ -20,16 +20,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.10"
           enable-cache: true
+
       - name: Sync dependencies
         run: uv sync --group dev
+
       - name: Ruff format check
         run: uv run ruff format --check ipcv_tools tests examples
+
       - name: Ruff lint
         run: uv run ruff check ipcv_tools tests
+
       - name: Mypy
         run: uv run mypy ipcv_tools examples --ignore-missing-imports --disallow-untyped-defs --follow-imports skip
 
@@ -38,18 +43,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.10"
           enable-cache: true
+
       - name: Install native dependencies for headless opencv / Qt
         run: |
           sudo apt update
           sudo apt install -y ffmpeg libsm6 libxext6
+
       - name: Sync dependencies
         run: uv sync --group dev
+
       - name: Install package (editable)
         run: uv pip install -e .
+
       - name: Run tests with coverage
         env:
           QT_QPA_PLATFORM: offscreen
@@ -60,21 +70,24 @@ jobs:
             --cov=ipcv_tools \
             --cov-report=xml \
             --cov-report=html
-      - name: Publish JUnit and coverage reports
-        uses: dorny/test-reporter@v1
+
+      - name: Publish JUnit test report
         if: always()
+        uses: dorny/test-reporter@v1
         with:
-          name: Test and coverage reports
-          path: report.xml, coverage.xml
-          reporter: github-checks
+          name: Test results
+          path: report.xml
+          reporter: java-junit
           fail-on-error: false
-      - name: Upload coverage artifacts
+
+      - name: Upload coverage XML
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: coverage.xml
           retention-days: 7
+
       - name: Upload HTML coverage
         if: always()
         uses: actions/upload-artifact@v4
@@ -88,16 +101,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.10"
           enable-cache: true
+
       - name: Install graphviz
         run: sudo apt update && sudo apt install -y graphviz graphviz-dev
+
       - name: Sync dependencies
         run: uv sync --group dev
+
       - name: Generate diagram
         run: uv run pyreverse -k -my -o png ipcv_tools/*.py
+
       - name: Upload diagram
         uses: actions/upload-artifact@v4
         with:

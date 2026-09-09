@@ -124,3 +124,28 @@ jobs:
             packages.png
             classes.png
           retention-days: 7
+
+  docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9"
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --frozen
+      - run: uv run mkdocs build --strict --site-dir docs-site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs-site
+      - uses: actions/deploy-pages@v4
+        id: deployment

@@ -67,3 +67,13 @@ distribution:
     - uv run twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   dependencies:
     - install
+
+pages:
+  extends: uv
+  stage: publish
+  script:
+    - uv run mkdocs build --strict --site-dir public
+  pages:
+    publish: public
+  rules:
+    - if: "$CI_COMMIT_BRANCH == $TARGET_BRANCH"

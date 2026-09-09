@@ -9,7 +9,7 @@ description = "Image processing and computer vision pipelines with live Qt / pyg
 readme = "README.md"
 authors = [{ name = "Patrik Mueller", email = "patrik.mueller@ost.ch" }]
 license = { file = "LICENSE" }
-requires-python = ">=3.10,<3.12"
+requires-python = ">=3.10,<3.13"
 keywords = ["computer-vision", "image-processing", "genicam", "opencv", "pipeline"]
 classifiers = [
   "Development Status :: 3 - Alpha",

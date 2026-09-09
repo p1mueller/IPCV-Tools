@@ -36,11 +36,7 @@ class Plotter(ABC):
     """Abstract class to plot within the UI."""
 
     def __init__(self) -> None:
-        """Initialize.
-
-        Args:
-            graph: Plot
-        """
+        """Initialize."""
         self.graph = None
 
     def set_graph(self, graph: pg.PlotWidget, example: np.ndarray) -> None:

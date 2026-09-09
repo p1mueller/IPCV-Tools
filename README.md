@@ -11,6 +11,8 @@ webcams, with two interchangeable display layers:
 A single `Pipeline` wires together the _camera → processor → viewer_ thread
 chain in a few lines of Python.
 
+> 📚 **Full docs:** [docs/index.md](docs/index.md) · [Getting started](docs/getting_started.md)
+
 ## Features
 
 - **Abstract camera layer** — `GenICam`, `Webcam` (OpenCV), and two mock

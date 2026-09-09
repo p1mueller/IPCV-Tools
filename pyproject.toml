@@ -7,11 +7,9 @@ name = "ipcv_tools"
 version = "0.0.1"
 description = "Image processing and computer vision pipelines with live Qt / pygame viewers."
 readme = "README.md"
-authors = [
-  { name = "Patrik Mueller", email = "patrik.mueller@ost.ch" },
-]
+authors = [{ name = "Patrik Mueller", email = "patrik.mueller@ost.ch" }]
 license = { file = "LICENSE" }
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.10,<3.12"
 keywords = ["computer-vision", "image-processing", "genicam", "opencv", "pipeline"]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -50,6 +48,12 @@ dev = [
 
 [dependency-groups]
 dev = [
+  "griffe-pydantic>=1.3.1",
+  "mkdocs>=1.6",
+  "mkdocs-api-autonav>=0.4.0",
+  "mkdocs-autoapi>=0.4.1",
+  "mkdocs-material>=9.6",
+  "mkdocstrings[python]>=0.29",
   "mypy==1.15.0",
   "pre-commit>=3.5.0",
   "pylint>=3.2.7",
